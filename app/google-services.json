@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "286399145404",
+    "firebase_url": "https://openreden.firebaseio.com",
+    "project_id": "openreden",
+    "storage_bucket": "openreden.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:286399145404:android:7ccca0eb8511211cbcf7b9",
+        "android_client_info": {
+          "package_name": "com.example.openreden"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "286399145404-7co89huvq66b3jr46av64n1drtj6799f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.openreden",
+            "certificate_hash": "f1c91406fc8bc272665c5e91a416fca877469eaf"
+          }
+        },
+        {
+          "client_id": "286399145404-ca9vsfb4p0tun5q71ajjbrogiuarrq3d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAX8MbpOZglO87agFYcTjDbCXjijAgEzLc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "286399145404-ca9vsfb4p0tun5q71ajjbrogiuarrq3d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
