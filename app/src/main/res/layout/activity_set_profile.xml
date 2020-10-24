@@ -80,52 +80,92 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.5">
 
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/photoIV"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_gravity="center"
-                android:background="#ffffff"
-                android:src="@drawable/ic_account_circle_grey"
-                app:civ_border_color="#ffffff"
-                app:civ_border_width="2dp"
-                android:onClick="importImage"/>
-
-            <EditText
-                android:id="@+id/nameET"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ems="12"
-                android:hint="@string/name"
-                android:background="@color/white"
-                android:textStyle="bold"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:inputType="textPersonName"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="10dp"/>
-
-        <EditText
-            android:id="@+id/bioET"
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/photoIV"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:background="#ffffff"
+            android:src="@drawable/ic_account_circle_grey"
+            app:civ_border_color="#ffffff"
+            app:civ_border_width="2dp"
+            android:onClick="importImage"/>
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ems="12"
-            android:hint="@string/bio"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:inputType="textMultiLine"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="10dp"/>
-
+            android:layout_marginBottom="5dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="0.2"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="\@"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:textColor="@color/special"
+                android:textStyle="bold"/>
+            <EditText
+                android:id="@+id/usernameET"
+                android:layout_width="0dp"
+                android:layout_weight="0.8"
+                android:layout_height="40dp"
+                android:hint="@string/username"
+                android:textSize="14sp"
+                android:textColor="#000000"
+                android:background="@color/white"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp">
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_weight="0.2"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_person"/>
+            <EditText
+                android:id="@+id/nameET"
+                android:layout_width="0dp"
+                android:layout_weight="0.8"
+                android:layout_height="40dp"
+                android:hint="@string/name"
+                android:textSize="14sp"
+                android:textColor="#000000"
+                android:background="@color/white"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp">
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_weight="0.2"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_bio"/>
+            <EditText
+                android:id="@+id/bioET"
+                android:layout_width="0dp"
+                android:layout_weight="0.8"
+                android:layout_height="40dp"
+                android:hint="@string/bio"
+                android:textSize="14sp"
+                android:textColor="#000000"
+                android:background="@color/white"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"/>
+        </LinearLayout>
         <Button
             android:id="@+id/finishButton"
             android:text="@string/finish"
             android:textSize="18sp"
             android:textColor="#FFFFFF"
+            android:layout_marginTop="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

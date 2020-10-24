@@ -11,9 +11,9 @@ public class StaticClass {
 
     public static int PICK_SINGLE_IMAGE = 1;
     public static String SHARED_PREFERENCES = "shared_preferences";
-    public static String NAME = "username";
+    public static String USERNAME = "username";
+    public static String NAME = "name";
     public static String EMAIL = "email";
-    public static String PHOTO = "photo";
     public static String BIO = "bio";
     public static String PROFILE_ID = "profile";
     public static String QUIZ_ID = "quiz_id";
@@ -24,7 +24,10 @@ public class StaticClass {
     public static String BACK_TO_ID = "back_to_id";
     public static String TIMELINE = "timeline";
     public static String PROFILE_FRAGMENT = "profile_fragment";
-    public static String profilePhotoJPG = "-profilePhoto.jpg";
+    public static String profilePhoto = "-profilePhoto";
+    public static String hasPhoto_0 = "has photo 0";
+    public static String hasPhoto_1 = "has photo 1";
+    public static String hasPhoto_2 = "has photo 2";
 
     public static boolean isValidEmail(String email) {
         if(email.length()>4){

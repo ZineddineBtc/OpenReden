@@ -19,6 +19,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -30,43 +32,53 @@ import com.example.openreden.R;
 import com.example.openreden.StaticClass;
 import com.example.openreden.activity.TermsActivity;
 import com.example.openreden.activity.core.CoreActivity;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class SetProfileActivity extends AppCompatActivity {
 
-    ImageView photoIV;
-    TextView errorTV;
-    EditText nameET, bioET;
-    Button finishButton;
-    ProgressDialog progressDialog;
-    FirebaseFirestore database;
-    FirebaseStorage storage;
-    SharedPreferences sharedPreferences;
-    String name, bio, email;
-    boolean imagePicked;
+    private ImageView photoIV;
+    private TextView errorTV;
+    private EditText usernameET, nameET, bioET;
+    private ProgressDialog progressDialog;
+    private FirebaseFirestore database;
+    private FirebaseStorage storage;
+    private SharedPreferences sharedPreferences;
+    private ArrayList<String> usernameList = new ArrayList<>();
+    private String username, name, bio, email;
+    private boolean imagePicked, usernameAvailable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_profile);
         Objects.requireNonNull(getSupportActionBar()).hide();
+        initializeInstances();
+        findViewsByIds();
+        checkBuildVersion();
+        getUsernameList();
+    }
+    private void initializeInstances(){
         sharedPreferences = getSharedPreferences(StaticClass.SHARED_PREFERENCES, MODE_PRIVATE);
         database = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
         progressDialog = new ProgressDialog(this);
-        findViewsByIds();
-        checkBuildVersion();
     }
     public void checkBuildVersion(){
         int MyVersion = Build.VERSION.SDK_INT;
@@ -103,9 +115,23 @@ public class SetProfileActivity extends AppCompatActivity {
     private void findViewsByIds(){
         errorTV = findViewById(R.id.errorTV);
         photoIV = findViewById(R.id.photoIV);
+        usernameET = findViewById(R.id.usernameET);
+        usernameET.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(usernameList.contains(String.valueOf(s)) || count<4){
+                    usernameET.setTextColor(getColor(R.color.dark_red));
+                    usernameAvailable = false;
+                }else{
+                    usernameET.setTextColor(getColor(R.color.green));
+                    usernameAvailable = true;
+                }
+            }
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }@Override public void afterTextChanged(Editable s) {}
+        });
         nameET = findViewById(R.id.nameET);
         bioET = findViewById(R.id.bioET);
-        finishButton = findViewById(R.id.finishButton);
+        Button finishButton = findViewById(R.id.finishButton);
         finishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -151,10 +177,42 @@ public class SetProfileActivity extends AppCompatActivity {
             }
         }
     }
-    public void finishRegister(){
+    private void getUsernameList(){
+        progressDialog.setMessage("Loading...");
+        progressDialog.show();
+        database.collection("app-data")
+                .document("usernames")
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot document) {
+                        if(document.exists()){
+                            usernameList = (ArrayList<String>) document.get("usernames");
+                            progressDialog.dismiss();
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(), "Failed at downloading usernameList", Toast.LENGTH_LONG).show();
+                        progressDialog.dismiss();
+                    }
+                });
+    }
+    private void finishRegister(){
         email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         if(!imagePicked){
             displayErrorTV(R.string.no_photo_selected);
+            return;
+        }
+        username = usernameET.getText().toString().trim();
+        if(username.length()<4){
+            displayErrorTV(R.string.insufficient_username);
+            return;
+        }
+        if(!usernameAvailable){
+            displayErrorTV(R.string.username_taken);
             return;
         }
         name = nameET.getText().toString().trim();
@@ -179,7 +237,7 @@ public class SetProfileActivity extends AppCompatActivity {
     }
     private void uploadPhoto(){
         byte[] data = getPhotoData();
-        storage.getReference().child(email+StaticClass.profilePhotoJPG)
+        storage.getReference().child(email+StaticClass.profilePhoto)
                 .putBytes(data)
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -196,16 +254,38 @@ public class SetProfileActivity extends AppCompatActivity {
     }
     private void writeSharedPreferences(){
         SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(StaticClass.USERNAME, username);
         editor.putString(StaticClass.NAME, name);
         editor.putString(StaticClass.BIO, bio);
         editor.putString(StaticClass.EMAIL, email);
         editor.apply();
-        writeOnlineDatabase();
+        appendUsernameToDB();
+    }
+    private void appendUsernameToDB(){
+        database.collection("app-data")
+                .document("usernames")
+                .update("usernames", FieldValue.arrayUnion(username))
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        writeOnlineDatabase();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(), "Failed at appending username to database", Toast.LENGTH_LONG).show();
+                    }
+                });
     }
     private void writeOnlineDatabase(){
         Map<String, Object> userReference = new HashMap<>();
+        userReference.put("username", username);
         userReference.put("name", name);
         userReference.put("bio", bio);
+        userReference.put("hasPhoto-0", false);
+        userReference.put("hasPhoto-1", false);
+        userReference.put("hasPhoto-2", false);
         database.collection("users")
                 .document(email)
                 .set(userReference)

@@ -26,4 +26,13 @@
     <string name="invalid_name">Invalid name</string>
     <string name="empty_bio">Empty bio</string>
     <string name="no_photo_selected">No photo is selected</string>
+    <string name="title_activity_core">CoreActivity</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
+    <string name="sign_out">Sign out</string>
+    <string name="error">Error</string>
+    <string name="view_picture">View Picture</string>
+    <string name="upload_a_new_picture">Upload a new picture</string>
+    <string name="delete">Delete</string>
+    <string name="insufficient_username">Username must contain more than 4 characters</string>
 </resources>
