@@ -1,12 +1,21 @@
-package com.example.openreden.activity.core;
+package com.example.openreden.activity.core.fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
+import android.text.Html;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,23 +28,30 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.example.openreden.R;
 import com.example.openreden.StaticClass;
+import com.example.openreden.activity.entry.LoginActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class ProfileFragment extends Fragment {
 
@@ -44,13 +60,20 @@ public class ProfileFragment extends Fragment {
     private ImageView photoIV, editUsernameIV, editNameIV, editBioIV;
     private TextView usernameTV, nameTV, bioTV, emailTV, signOutTV, errorTV;
     private EditText usernameET, nameET, bioET;
-    private LinearLayout galleryLL;
+    private LinearLayout galleryLL, viewPhotoLL, uploadPhotoLL;
+    private ProgressDialog progressDialog;
     private FirebaseFirestore database;
     private FirebaseStorage storage;
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
-    private String username, name, bio, email;
+    private String username, name, email;
     private boolean usernameETShown, nameETShown, bioETShown;
+    private byte[] data;
+    @SuppressLint("StaticFieldLeak")
+    public static LinearLayout shadeLL, photoOptionsLL;
+    @SuppressLint("StaticFieldLeak")
+    public static ImageView fullScreenIV;
+    public static boolean photoOptionsShown, fullScreenShown;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -68,6 +91,7 @@ public class ProfileFragment extends Fragment {
         sharedPreferences = context.getSharedPreferences(StaticClass.SHARED_PREFERENCES, Context.MODE_PRIVATE);
         email = sharedPreferences.getString(StaticClass.EMAIL, "no email");
         editor = sharedPreferences.edit();
+        progressDialog = new ProgressDialog(context);
     }
     private void findViewsByIds(){
         photoIV = fragmentView.findViewById(R.id.photoIV);
@@ -85,12 +109,22 @@ public class ProfileFragment extends Fragment {
         editUsernameIV = fragmentView.findViewById(R.id.editUsernameIV);
         editNameIV = fragmentView.findViewById(R.id.editNameIV);
         editBioIV = fragmentView.findViewById(R.id.editBioIV);
+        shadeLL = fragmentView.findViewById(R.id.shadeLL);
+        photoOptionsLL = fragmentView.findViewById(R.id.photoOptionsLL);
+        viewPhotoLL = fragmentView.findViewById(R.id.viewPhotoLL);
+        uploadPhotoLL = fragmentView.findViewById(R.id.uploadPhotoLL);
+        fullScreenIV = fragmentView.findViewById(R.id.fullScreenIV);
     }
     private void setGalleryHeight(){
-        DisplayMetrics displaymetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-        int width = displaymetrics.widthPixels;
-        galleryLL.setMinimumHeight(width/3);
+        try {
+            DisplayMetrics displaymetrics = new DisplayMetrics();
+            Objects.requireNonNull(getActivity())
+                    .getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+            int width = displaymetrics.widthPixels;
+            galleryLL.setMinimumHeight(width / 3);
+        }catch (NullPointerException e){
+            galleryLL.setMinimumHeight(100);
+        }
     }
     private void getPhoto(){
         final long ONE_MEGABYTE = 1024 * 1024;
@@ -111,6 +145,7 @@ public class ProfileFragment extends Fragment {
         Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         photoIV.setImageBitmap(Bitmap.createScaledBitmap(bmp, photoIV.getWidth(),
                 photoIV.getHeight(), false));
+        fullScreenIV.setImageDrawable(photoIV.getDrawable());
     }
     private void setUserData(){
         photoIV.setDrawingCacheEnabled(true);
@@ -121,13 +156,19 @@ public class ProfileFragment extends Fragment {
         name = sharedPreferences.getString(StaticClass.NAME, "no name");
         nameTV.setText(name);
         nameET.setText(name);
-        bio = sharedPreferences.getString(StaticClass.BIO, "no bio");
+        String bio = sharedPreferences.getString(StaticClass.BIO, "no bio");
         bioTV.setText(bio);
         bioET.setText(bio);
         emailTV.setText(email);
         setListeners();
     }
     private void setListeners(){
+        photoIV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPhotoOptions();
+            }
+        });
         editUsernameIV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -145,6 +186,116 @@ public class ProfileFragment extends Fragment {
             public void onClick(View v) {
                 editBio();
             }
+        });
+        signOutTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                displaySignOutDialog();
+            }
+        });
+        viewPhotoLL.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewPhoto();
+            }
+        });
+        uploadPhotoLL.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                importImage();
+            }
+        });
+
+    }
+    private void importImage(){
+        Intent intent;
+        intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.setType("image/*");
+        startActivityForResult(
+                Intent.createChooser(intent, "Select Images"),
+                StaticClass.PICK_SINGLE_IMAGE);
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == StaticClass.PICK_SINGLE_IMAGE && resultCode == Activity.RESULT_OK) {
+            if (data == null) {
+                Toast.makeText(context, "ERROR", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Uri uri = data.getData();
+            if(uri != null){
+                final int takeFlags = data.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION;
+                ContentResolver resolver = context.getContentResolver();
+                resolver.takePersistableUriPermission(uri, takeFlags);
+
+                Bitmap imageBitmap = null;
+                try {
+                    imageBitmap = MediaStore.Images.Media.getBitmap(
+                            context.getContentResolver(), uri);
+                } catch (IOException e) {
+                    Toast.makeText(context, "IO Exception when selecting a profile image",
+                            Toast.LENGTH_LONG).show();
+                }
+                photoIV.setImageBitmap(imageBitmap);
+                changePhoto();
+            }
+        }
+    }
+    private byte[] getPhotoData(){
+        Bitmap bitmap = ((BitmapDrawable) photoIV.getDrawable()).getBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        return baos.toByteArray();
+    }
+    private void showPhotoOptions(){
+        shadeLL.setVisibility(View.VISIBLE);
+        photoOptionsLL.setVisibility(View.VISIBLE);
+        photoOptionsShown = true;
+    }
+    private void viewPhoto(){
+        photoOptionsLL.setVisibility(View.GONE);
+        fullScreenIV.setVisibility(View.VISIBLE);
+        photoOptionsShown = false;
+        fullScreenShown = true;
+    }
+    private void changePhoto(){
+        data = getPhotoData();
+        progressDialog.setMessage("Uploading...");
+        progressDialog.show();
+        deletePhoto();
+    }
+    private void deletePhoto(){
+        storage.getReference().child(email+StaticClass.profilePhoto)
+                .delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                uploadPhoto();
+            }
+        });
+    }
+    private void uploadPhoto(){
+        storage.getReference().child(email+StaticClass.profilePhoto)
+                .putBytes(data)
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        progressDialog.dismiss();
+                        Toast.makeText(context, "Failure", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        progressDialog.dismiss();
+                        Toast.makeText(context, "Uploaded!", Toast.LENGTH_LONG).show();
+                        shadeLL.setVisibility(View.GONE);
+                        photoOptionsLL.setVisibility(View.GONE);
+                        photoOptionsShown = false;
+                    }
         });
     }
     private void editUsername(){
@@ -342,6 +493,31 @@ public class ProfileFragment extends Fragment {
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+    private void displaySignOutDialog(){
+        try {
+            new AlertDialog.Builder(getActivity())
+                    .setTitle("Sign out")
+                    .setMessage("Are you sure you want to sign out?")
+                    .setPositiveButton(
+                            Html.fromHtml("<font color=\"#FF0000\"> Sign out </font>")
+                            , new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    signOut();
+                                }
+                            })
+                    .setNegativeButton(
+                            Html.fromHtml("<font color=\"#1976D2\"> Cancel </font>"),
+                            null)
+                    .show();
+        }catch (NullPointerException e){
+            Toast.makeText(context, "Failed at showing AlertDialog", Toast.LENGTH_SHORT).show();
+            signOut();
+        }
+    }
+    private void signOut(){
+        FirebaseAuth.getInstance().signOut();
+        startActivity(new Intent(fragmentView.getContext(), LoginActivity.class));
     }
     private void displayErrorTV(int resourceID) {
         errorTV.setText(resourceID);

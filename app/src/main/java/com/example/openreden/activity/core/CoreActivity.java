@@ -4,12 +4,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
 import com.example.openreden.R;
+import com.example.openreden.activity.core.fragment.ChatsFragment;
+import com.example.openreden.activity.core.fragment.ExploreFragment;
+import com.example.openreden.activity.core.fragment.ProfileFragment;
 import com.example.openreden.adapter.TabAdapter;
 import com.google.android.material.tabs.TabLayout;
+
+import static com.example.openreden.activity.core.fragment.ProfileFragment.fullScreenIV;
+import static com.example.openreden.activity.core.fragment.ProfileFragment.fullScreenShown;
+import static com.example.openreden.activity.core.fragment.ProfileFragment.photoOptionsLL;
+import static com.example.openreden.activity.core.fragment.ProfileFragment.photoOptionsShown;
+import static com.example.openreden.activity.core.fragment.ProfileFragment.shadeLL;
 
 public class CoreActivity extends AppCompatActivity {
 
@@ -79,4 +89,18 @@ public class CoreActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if (photoOptionsShown){
+            shadeLL.setVisibility(View.GONE);
+            photoOptionsLL.setVisibility(View.GONE);
+            photoOptionsShown = false;
+        }else if(fullScreenShown){
+            shadeLL.setVisibility(View.GONE);
+            fullScreenIV.setVisibility(View.GONE);
+            fullScreenShown = false;
+        }else{
+            moveTaskToBack(true);
+        }
+    }
 }
