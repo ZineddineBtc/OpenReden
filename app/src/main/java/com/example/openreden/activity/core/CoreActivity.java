@@ -9,14 +9,12 @@ import android.widget.Toast;
 import android.widget.Toolbar;
 
 import com.example.openreden.R;
+import com.example.openreden.StaticClass;
 import com.example.openreden.activity.core.fragment.ChatsFragment;
 import com.example.openreden.activity.core.fragment.ExploreFragment;
 import com.example.openreden.activity.core.fragment.ProfileFragment;
 import com.example.openreden.adapter.TabAdapter;
 import com.google.android.material.tabs.TabLayout;
-
-import static com.example.openreden.activity.core.fragment.ProfileFragment.fullScreenIV;
-import static com.example.openreden.activity.core.fragment.ProfileFragment.fullScreenShown;
 import static com.example.openreden.activity.core.fragment.ProfileFragment.photoOptionsLL;
 import static com.example.openreden.activity.core.fragment.ProfileFragment.photoOptionsShown;
 import static com.example.openreden.activity.core.fragment.ProfileFragment.shadeLL;
@@ -27,6 +25,7 @@ public class CoreActivity extends AppCompatActivity {
     private TabAdapter adapter;
     private TabLayout tabLayout;
     private ViewPager viewPager;
+    private String to;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +51,7 @@ public class CoreActivity extends AppCompatActivity {
         toolbar.setTitleTextColor(getColor(R.color.special));
         viewPager.setAdapter(adapter);
         tabLayout.setupWithViewPager(viewPager);
-        updateIcons(0);
+        openFragment();
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
@@ -88,17 +87,23 @@ public class CoreActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
-
+    public void openFragment(){
+        int position = 0;
+        to = getIntent().getStringExtra(StaticClass.TO);
+        if(to != null) {
+            if (to.equals(StaticClass.PROFILE_FRAGMENT)){
+                position = 2;
+            }
+        }
+        viewPager.setCurrentItem(position);
+        updateIcons(position);
+    }
     @Override
     public void onBackPressed() {
         if (photoOptionsShown){
             shadeLL.setVisibility(View.GONE);
             photoOptionsLL.setVisibility(View.GONE);
             photoOptionsShown = false;
-        }else if(fullScreenShown){
-            shadeLL.setVisibility(View.GONE);
-            fullScreenIV.setVisibility(View.GONE);
-            fullScreenShown = false;
         }else{
             moveTaskToBack(true);
         }

@@ -237,7 +237,7 @@ public class SetProfileActivity extends AppCompatActivity {
     }
     private void uploadPhoto(){
         byte[] data = getPhotoData();
-        storage.getReference().child(email+StaticClass.profilePhoto)
+        storage.getReference().child(email+StaticClass.PROFILE_PHOTO)
                 .putBytes(data)
                 .addOnFailureListener(new OnFailureListener() {
                     @Override

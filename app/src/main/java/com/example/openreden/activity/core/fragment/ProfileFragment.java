@@ -33,6 +33,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.openreden.R;
 import com.example.openreden.StaticClass;
+import com.example.openreden.activity.core.FullScreenActivity;
 import com.example.openreden.activity.entry.LoginActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -71,8 +72,6 @@ public class ProfileFragment extends Fragment {
     private byte[] data;
     @SuppressLint("StaticFieldLeak")
     public static LinearLayout shadeLL, photoOptionsLL;
-    @SuppressLint("StaticFieldLeak")
-    public static ImageView fullScreenIV;
     public static boolean photoOptionsShown, fullScreenShown;
 
     @Override
@@ -113,7 +112,6 @@ public class ProfileFragment extends Fragment {
         photoOptionsLL = fragmentView.findViewById(R.id.photoOptionsLL);
         viewPhotoLL = fragmentView.findViewById(R.id.viewPhotoLL);
         uploadPhotoLL = fragmentView.findViewById(R.id.uploadPhotoLL);
-        fullScreenIV = fragmentView.findViewById(R.id.fullScreenIV);
     }
     private void setGalleryHeight(){
         try {
@@ -128,7 +126,7 @@ public class ProfileFragment extends Fragment {
     }
     private void getPhoto(){
         final long ONE_MEGABYTE = 1024 * 1024;
-        storage.getReference(email + StaticClass.profilePhoto)
+        storage.getReference(email + StaticClass.PROFILE_PHOTO)
                 .getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override
             public void onSuccess(byte[] bytes) {
@@ -145,7 +143,6 @@ public class ProfileFragment extends Fragment {
         Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         photoIV.setImageBitmap(Bitmap.createScaledBitmap(bmp, photoIV.getWidth(),
                 photoIV.getHeight(), false));
-        fullScreenIV.setImageDrawable(photoIV.getDrawable());
     }
     private void setUserData(){
         photoIV.setDrawingCacheEnabled(true);
@@ -257,10 +254,10 @@ public class ProfileFragment extends Fragment {
         photoOptionsShown = true;
     }
     private void viewPhoto(){
-        photoOptionsLL.setVisibility(View.GONE);
-        fullScreenIV.setVisibility(View.VISIBLE);
-        photoOptionsShown = false;
-        fullScreenShown = true;
+        startActivity(new Intent(context, FullScreenActivity.class)
+        .putExtra(StaticClass.FROM, StaticClass.PROFILE_FRAGMENT)
+        .putExtra(StaticClass.PROFILE_ID, email)
+        .putExtra(StaticClass.PHOTO_SIGNATURE, StaticClass.PROFILE_PHOTO));
     }
     private void changePhoto(){
         data = getPhotoData();
@@ -269,7 +266,7 @@ public class ProfileFragment extends Fragment {
         deletePhoto();
     }
     private void deletePhoto(){
-        storage.getReference().child(email+StaticClass.profilePhoto)
+        storage.getReference().child(email+StaticClass.PROFILE_PHOTO)
                 .delete().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
@@ -278,7 +275,7 @@ public class ProfileFragment extends Fragment {
         });
     }
     private void uploadPhoto(){
-        storage.getReference().child(email+StaticClass.profilePhoto)
+        storage.getReference().child(email+StaticClass.PROFILE_PHOTO)
                 .putBytes(data)
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
