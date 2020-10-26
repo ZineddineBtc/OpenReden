@@ -178,18 +178,74 @@
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp">
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="0.2"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_photos"/>
+                <TextView
+                    android:id="@+id/galleryTV"
+                    android:layout_width="0dp"
+                    android:layout_weight="0.8"
+                    android:layout_height="40dp"
+                    android:text="@string/pictures"
+                    android:textSize="14sp"
+                    android:textColor="#000000"
+                    android:background="@color/white"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center_vertical"/>
+
+                <ImageView
+                    android:id="@+id/addGalleryPhotoIV"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="0.2"
+                    android:src="@drawable/ic_add_circle_outline" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:orientation="vertical"
                 android:background="@drawable/white_background_border"
-                android:layout_marginBottom="10dp"/>
-            <LinearLayout
-                android:id="@+id/galleryLL"
+                android:layout_marginBottom="5dp"/>
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/emptyGalleryTV"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/special"
-                android:orientation="horizontal">
+                android:gravity="center"
+                android:layout_marginBottom="5dp"
+                android:textSize="14sp"
+                android:text="@string/no_pictures_to_display"/>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="200dp">
+                <androidx.viewpager.widget.ViewPager
+                    android:id="@+id/galleryVP"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                </androidx.viewpager.widget.ViewPager>
 
-            </LinearLayout>
+                <ImageView
+                    android:visibility="gone"
+                    android:id="@+id/deleteGalleryPhotoIV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_margin="5dp"
+                    android:src="@drawable/ic_delete_red" />
+            </RelativeLayout>
+            <LinearLayout
+                android:id="@+id/galleryDotsLL"
+                android:orientation="horizontal"
+                android:gravity="center_vertical|center_horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"/>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="1dp"

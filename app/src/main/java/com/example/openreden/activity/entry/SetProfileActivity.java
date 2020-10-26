@@ -48,6 +48,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 
@@ -258,6 +259,7 @@ public class SetProfileActivity extends AppCompatActivity {
         editor.putString(StaticClass.NAME, name);
         editor.putString(StaticClass.BIO, bio);
         editor.putString(StaticClass.EMAIL, email);
+        editor.putStringSet(StaticClass.GALLERY, new HashSet<>(new ArrayList<String>()));
         editor.apply();
         appendUsernameToDB();
     }
@@ -283,9 +285,7 @@ public class SetProfileActivity extends AppCompatActivity {
         userReference.put("username", username);
         userReference.put("name", name);
         userReference.put("bio", bio);
-        userReference.put("hasPhoto-0", false);
-        userReference.put("hasPhoto-1", false);
-        userReference.put("hasPhoto-2", false);
+        userReference.put("gallery", new ArrayList<String>());
         database.collection("users")
                 .document(email)
                 .set(userReference)

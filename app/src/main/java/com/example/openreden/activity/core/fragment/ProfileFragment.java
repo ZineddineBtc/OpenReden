@@ -16,7 +16,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.text.Html;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,11 +29,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.ViewPager;
 
 import com.example.openreden.R;
 import com.example.openreden.StaticClass;
 import com.example.openreden.activity.core.FullScreenActivity;
 import com.example.openreden.activity.entry.LoginActivity;
+import com.example.openreden.adapter.GalleryAdapter;
+import com.example.openreden.model.Photo;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -51,28 +53,38 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 
 public class ProfileFragment extends Fragment {
 
     private View fragmentView;
     private Context context;
-    private ImageView photoIV, editUsernameIV, editNameIV, editBioIV;
-    private TextView usernameTV, nameTV, bioTV, emailTV, signOutTV, errorTV;
+    private ImageView photoIV, editUsernameIV, editNameIV, editBioIV,
+            addGalleryPhotoIV, deleteGalleryPhotoIV;
+    private TextView usernameTV, nameTV, bioTV, emailTV, galleryTV, emptyGalleryTV,
+            signOutTV, errorTV;
     private EditText usernameET, nameET, bioET;
-    private LinearLayout galleryLL, viewPhotoLL, uploadPhotoLL;
+    private ViewPager galleryVP;
+    private GalleryAdapter galleryAdapter;
+    private LinearLayout galleryDotsLL;
+    private ImageView[] dots;
+    private int dotsCount;
+    private LinearLayout viewPhotoLL, uploadPhotoLL;
     private ProgressDialog progressDialog;
     private FirebaseFirestore database;
     private FirebaseStorage storage;
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
-    private String username, name, email;
+    private ArrayList<String> galleryReferences;
+    private ArrayList<Photo> photos = new ArrayList<>();
+    private String username, name, email, galleryReference;
     private boolean usernameETShown, nameETShown, bioETShown;
-    private byte[] data;
+    private byte[] profilePhotoData;
+    private int loadingCount = 1, galleryReferenceIndex;
     @SuppressLint("StaticFieldLeak")
     public static LinearLayout shadeLL, photoOptionsLL;
-    public static boolean photoOptionsShown, fullScreenShown;
+    public static boolean photoOptionsShown;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -82,6 +94,7 @@ public class ProfileFragment extends Fragment {
         findViewsByIds();
         setUserData();
         getPhoto();
+        getGallery();
         return fragmentView;
     }
     private void getInstances(){
@@ -96,53 +109,26 @@ public class ProfileFragment extends Fragment {
         photoIV = fragmentView.findViewById(R.id.photoIV);
         usernameTV = fragmentView.findViewById(R.id.usernameTV);
         usernameET = fragmentView.findViewById(R.id.usernameET);
+        editUsernameIV = fragmentView.findViewById(R.id.editUsernameIV);
         nameTV = fragmentView.findViewById(R.id.nameTV);
         nameET = fragmentView.findViewById(R.id.nameET);
+        editNameIV = fragmentView.findViewById(R.id.editNameIV);
         bioTV = fragmentView.findViewById(R.id.bioTV);
         bioET = fragmentView.findViewById(R.id.bioET);
+        editBioIV = fragmentView.findViewById(R.id.editBioIV);
         emailTV = fragmentView.findViewById(R.id.emailTV);
+        galleryTV = fragmentView.findViewById(R.id.galleryTV);
+        addGalleryPhotoIV = fragmentView.findViewById(R.id.addGalleryPhotoIV);
+        deleteGalleryPhotoIV = fragmentView.findViewById(R.id.deleteGalleryPhotoIV);
+        emptyGalleryTV = fragmentView.findViewById(R.id.emptyGalleryTV);
+        galleryVP = fragmentView.findViewById(R.id.galleryVP);
+        galleryDotsLL = fragmentView.findViewById(R.id.galleryDotsLL);
         signOutTV = fragmentView.findViewById(R.id.signOutTV);
         errorTV = fragmentView.findViewById(R.id.errorTV);
-        galleryLL = fragmentView.findViewById(R.id.galleryLL);
-        setGalleryHeight();
-        editUsernameIV = fragmentView.findViewById(R.id.editUsernameIV);
-        editNameIV = fragmentView.findViewById(R.id.editNameIV);
-        editBioIV = fragmentView.findViewById(R.id.editBioIV);
         shadeLL = fragmentView.findViewById(R.id.shadeLL);
         photoOptionsLL = fragmentView.findViewById(R.id.photoOptionsLL);
         viewPhotoLL = fragmentView.findViewById(R.id.viewPhotoLL);
         uploadPhotoLL = fragmentView.findViewById(R.id.uploadPhotoLL);
-    }
-    private void setGalleryHeight(){
-        try {
-            DisplayMetrics displaymetrics = new DisplayMetrics();
-            Objects.requireNonNull(getActivity())
-                    .getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-            int width = displaymetrics.widthPixels;
-            galleryLL.setMinimumHeight(width / 3);
-        }catch (NullPointerException e){
-            galleryLL.setMinimumHeight(100);
-        }
-    }
-    private void getPhoto(){
-        final long ONE_MEGABYTE = 1024 * 1024;
-        storage.getReference(email + StaticClass.PROFILE_PHOTO)
-                .getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-            @Override
-            public void onSuccess(byte[] bytes) {
-                setBytesToPhoto(bytes);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                Toast.makeText(context, "Failure", Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-    private void setBytesToPhoto(byte[] bytes){
-        Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        photoIV.setImageBitmap(Bitmap.createScaledBitmap(bmp, photoIV.getWidth(),
-                photoIV.getHeight(), false));
     }
     private void setUserData(){
         photoIV.setDrawingCacheEnabled(true);
@@ -157,7 +143,51 @@ public class ProfileFragment extends Fragment {
         bioTV.setText(bio);
         bioET.setText(bio);
         emailTV.setText(email);
+        setGallery();
         setListeners();
+    }
+    private void setGallery(){
+        galleryReferences = new ArrayList<>(sharedPreferences.getStringSet(StaticClass.GALLERY, new HashSet<String>()));
+        String twoSpaces = "  ";
+        StringBuilder stringBuilder = new StringBuilder(getString(R.string.pictures));
+        stringBuilder.append(twoSpaces).append("(").append(photos.size()).append("/3)");
+        galleryTV.setText(stringBuilder);
+        galleryVP.setVisibility(photos.isEmpty() ? View.GONE : View.VISIBLE);
+        emptyGalleryTV.setVisibility(!photos.isEmpty() ? View.GONE : View.VISIBLE);
+        deleteGalleryPhotoIV.setVisibility(photos.isEmpty() ? View.GONE : View.VISIBLE);
+        if(photos.isEmpty()) {
+            return;
+        }
+        addGalleryPhotoIV.setVisibility(photos.size() == StaticClass.MAX_GALLERY_COUNT ?
+                                        View.INVISIBLE : View.VISIBLE);
+        galleryAdapter = new GalleryAdapter(context, photos);
+        galleryVP.setAdapter(galleryAdapter);
+        setGalleryDotsLL();
+    }
+    private void setGalleryDotsLL(){
+        dotsCount = galleryAdapter.getCount();
+        galleryDotsLL.removeAllViews();
+        dots = new ImageView[dotsCount];
+        for(int i = 0; i < dotsCount; i++){
+            dots[i] = new ImageView(context);
+            dots[i].setImageDrawable(context.getDrawable(R.drawable.nonactive_dot));
+            LinearLayout.LayoutParams params =
+                    new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.setMargins(8, 0, 8, 0);
+            galleryDotsLL.addView(dots[i], params);
+        }
+        dots[0].setImageDrawable(context.getDrawable(R.drawable.active_dot));
+        galleryVP.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                for(int i = 0; i< dotsCount; i++){
+                    dots[i].setImageDrawable(context.getDrawable(R.drawable.nonactive_dot));
+                }
+                dots[position].setImageDrawable(context.getDrawable(R.drawable.active_dot));
+            }
+            @Override public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}@Override public void onPageScrollStateChanged(int state) {}
+        });
     }
     private void setListeners(){
         photoIV.setOnClickListener(new View.OnClickListener() {
@@ -184,6 +214,12 @@ public class ProfileFragment extends Fragment {
                 editBio();
             }
         });
+        addGalleryPhotoIV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                importImage();
+            }
+        });
         signOutTV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -198,11 +234,64 @@ public class ProfileFragment extends Fragment {
         });
         uploadPhotoLL.setOnClickListener(new View.OnClickListener() {
             @Override
+            public void onClick(View v) { if(photos.size()<StaticClass.MAX_GALLERY_COUNT) importImage(); }
+        });
+        deleteGalleryPhotoIV.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View v) {
-                importImage();
+                deletePhotoGallery();
             }
         });
-
+    }
+    private void getPhoto(){
+        final long ONE_MEGABYTE = 1024 * 1024;
+        storage.getReference(email + StaticClass.PROFILE_PHOTO)
+                .getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                setBytesToPhoto(bytes);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Toast.makeText(context, "Failure", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    private void setBytesToPhoto(byte[] bytes){
+        Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        photoIV.setImageBitmap(Bitmap.createScaledBitmap(bmp, photoIV.getWidth(),
+                photoIV.getHeight(), false));
+    }
+    private void getGallery(){
+        if(!galleryReferences.isEmpty()){
+            final long ONE_MEGABYTE = 1024 * 1024 * 2;
+            for(final String reference: galleryReferences){
+                progressDialog.setMessage("Picture ("+ loadingCount +"/"+galleryReferences.size()+")");
+                progressDialog.show();
+                storage.getReference(reference)
+                        .getBytes(ONE_MEGABYTE)
+                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                            @Override
+                            public void onSuccess(byte[] bytes) {
+                                photos.add(new Photo(
+                                        BitmapFactory.decodeByteArray(bytes, 0, bytes.length),
+                                        reference));
+                                setGallery();
+                                progressDialog.dismiss();
+                                loadingCount++;
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                Toast.makeText(context, "Failed at getting gallery", Toast.LENGTH_LONG).show();
+                            }
+                        });
+            }
+        }else{
+            galleryVP.setVisibility(View.GONE);
+            emptyGalleryTV.setVisibility(View.VISIBLE);
+        }
     }
     private void importImage(){
         Intent intent;
@@ -237,12 +326,16 @@ public class ProfileFragment extends Fragment {
                     Toast.makeText(context, "IO Exception when selecting a profile image",
                             Toast.LENGTH_LONG).show();
                 }
-                photoIV.setImageBitmap(imageBitmap);
-                changePhoto();
+                if(photoOptionsShown) {
+                    photoIV.setImageBitmap(imageBitmap);
+                    changePhoto();
+                }else{
+                    uploadGalleryPhoto(imageBitmap);
+                }
             }
         }
     }
-    private byte[] getPhotoData(){
+    private byte[] getProfilePhotoData(){
         Bitmap bitmap = ((BitmapDrawable) photoIV.getDrawable()).getBitmap();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
@@ -260,7 +353,7 @@ public class ProfileFragment extends Fragment {
         .putExtra(StaticClass.PHOTO_SIGNATURE, StaticClass.PROFILE_PHOTO));
     }
     private void changePhoto(){
-        data = getPhotoData();
+        profilePhotoData = getProfilePhotoData();
         progressDialog.setMessage("Uploading...");
         progressDialog.show();
         deletePhoto();
@@ -276,7 +369,7 @@ public class ProfileFragment extends Fragment {
     }
     private void uploadPhoto(){
         storage.getReference().child(email+StaticClass.PROFILE_PHOTO)
-                .putBytes(data)
+                .putBytes(profilePhotoData)
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception exception) {
@@ -326,7 +419,7 @@ public class ProfileFragment extends Fragment {
         usernameETShown = !usernameETShown;
     }
     private void checkIfUsernameTaken(final String newUsername){
-        database.collection("app-data")
+        database.collection("app-profilePhotoData")
                 .document("usernames").get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -350,7 +443,7 @@ public class ProfileFragment extends Fragment {
         });
     }
     private void adjustUsernameList(String oldUsername, String newUsername){
-        database.collection("app-data")
+        database.collection("app-profilePhotoData")
                 .document("usernames")
                 .update("usernames", FieldValue.arrayRemove(oldUsername),
                         "usernames", FieldValue.arrayUnion(newUsername));
@@ -490,6 +583,99 @@ public class ProfileFragment extends Fragment {
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+    private byte[] getGalleryPhotoData(Bitmap imageBitmap){
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        return baos.toByteArray();
+    }
+    private void uploadGalleryPhoto(Bitmap imageBitmap){
+        progressDialog.setMessage("Uploading...");
+        progressDialog.show();
+        byte[] galleryPhotoData = getGalleryPhotoData(imageBitmap);
+        final String storageReference = email+"-"+StaticClass.getCurrentTime();
+        photos.add(new Photo(imageBitmap, storageReference));
+        storage.getReference().child(storageReference)
+                .putBytes(galleryPhotoData)
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Toast.makeText(context, "Failure at uploading gallery photo", Toast.LENGTH_LONG).show();
+                        progressDialog.dismiss();
+                    }
+                })
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Toast.makeText(context, "Uploaded!", Toast.LENGTH_LONG).show();
+                        addGalleryPhotoReference(storageReference);
+                        setGallery();
+                        progressDialog.dismiss();
+                    }
+                });
+    }
+    private void addGalleryPhotoReference(String storageReference){
+        database.collection("users")
+                .document(email)
+                .update("gallery", FieldValue.arrayUnion(storageReference));
+        galleryReferences.add(storageReference);
+        editor.putStringSet(StaticClass.GALLERY, new HashSet<>(galleryReferences));
+        editor.apply();
+    }
+    private void deletePhotoGallery(){
+        progressDialog.setMessage("Deleting...");
+        progressDialog.show();
+        galleryReferenceIndex = galleryVP.getCurrentItem();
+        galleryReference = photos.get(galleryReferenceIndex).getStorageReference();
+        storage.getReference()
+                .child(galleryReference)
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        deleteOnlineGalleryReference(galleryReference);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        progressDialog.dismiss();
+                        Toast.makeText(context, "Failed at deleting picture", Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+    private void deleteOnlineGalleryReference(final String galleryReference){
+        database.collection("users")
+                .document(email)
+                .update("gallery", FieldValue.arrayRemove(galleryReference))
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        deleteLocalGalleryReference();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        progressDialog.dismiss();
+                        Toast.makeText(context, "Failed at deleting picture", Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+    private void deleteLocalGalleryReference(){
+        galleryReferences.remove(galleryReference);
+        int removeIndex = -1;
+        for(int i=0; i<photos.size(); i++) {
+            if (photos.get(i).getStorageReference().equals(galleryReference)) {
+                removeIndex = i;
+                break;
+            }
+        }
+        if(removeIndex!=-1) photos.remove(removeIndex);
+        editor.putStringSet(StaticClass.GALLERY, new HashSet<>(galleryReferences));
+        editor.apply();
+        setGallery();
+        progressDialog.dismiss();
     }
     private void displaySignOutDialog(){
         try {

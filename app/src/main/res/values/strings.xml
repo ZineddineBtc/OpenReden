@@ -35,4 +35,6 @@
     <string name="upload_a_new_picture">Upload a new picture</string>
     <string name="delete">Delete</string>
     <string name="insufficient_username">Username must contain more than 4 characters</string>
+    <string name="pictures">Pictures</string>
+    <string name="no_pictures_to_display">No pictures to display</string>
 </resources>

@@ -26,6 +26,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
@@ -78,10 +79,13 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 });
     }
-    public void setSharedPreferences(String email, String username, String bio){
+    public void setSharedPreferences(String email, String username, String name,
+                                     String bio, ArrayList<String> galleryReferences){
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(StaticClass.NAME, username);
+        editor.putString(StaticClass.USERNAME, username);
+        editor.putString(StaticClass.NAME, name);
         editor.putString(StaticClass.BIO, bio);
+        editor.putStringSet(StaticClass.GALLERY, new HashSet<>(galleryReferences));
         editor.putString(StaticClass.EMAIL, email);
         editor.apply();
         progressDialog.dismiss();
@@ -98,12 +102,12 @@ public class LoginActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
-                        ArrayList<String> interests = (ArrayList<String>)
-                                document.get("interests");
                         setSharedPreferences(
                                 document.getId(),
                                 String.valueOf(document.get("username")),
-                                String.valueOf(document.get("bio")));
+                                String.valueOf(document.get("name")),
+                                String.valueOf(document.get("bio")),
+                                (ArrayList<String>)document.get("gallery"));
                     }
                 } else {
                     Toast.makeText(getApplicationContext(),

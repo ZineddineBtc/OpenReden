@@ -64,8 +64,8 @@ public class SliderActivity extends AppCompatActivity {
     }
     public void findViewsByIds(){
         nextSignUpButton = findViewById(R.id.nextSignUpButton);
-        viewPager = findViewById(R.id.view_pager);
-        sliderDotsPanel = findViewById(R.id.slider_dots);
+        viewPager = findViewById(R.id.sliderVP);
+        sliderDotsPanel = findViewById(R.id.sliderDots);
         imageAdapter = new SliderAdapter(this);
         viewPager.setAdapter(imageAdapter);
     }

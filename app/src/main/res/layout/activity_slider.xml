@@ -10,13 +10,13 @@
     android:background="#000000">
 
     <androidx.viewpager.widget.ViewPager
-        android:id="@+id/view_pager"
+        android:id="@+id/sliderVP"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight=".5">
     </androidx.viewpager.widget.ViewPager>
     <LinearLayout
-        android:id="@+id/slider_dots"
+        android:id="@+id/sliderDots"
         android:orientation="horizontal"
         android:gravity="center_vertical|center_horizontal"
         android:layout_width="match_parent"
