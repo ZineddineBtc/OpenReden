@@ -7,7 +7,7 @@
     android:orientation="vertical"
     tools:context=".activity.core.CoreActivity">
     
-    <include layout="@layout/app_bar" />
+    <include layout="@layout/core_bar" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"

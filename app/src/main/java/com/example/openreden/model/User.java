@@ -1,7 +1,21 @@
 package com.example.openreden.model;
 
 public class User {
-    private String name, id;
+    private String id, username, name;
+
+    public User(String id, String username, String name) {
+        this.id = id;
+        this.username = username;
+        this.name = name;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public String getName() {
         return name;

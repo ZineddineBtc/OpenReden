@@ -41,4 +41,8 @@
     <string name="random_name">Leonardo</string>
     <string name="random_message">Hey</string>
     <string name="random_time">13:30 PM</string>
+    <string name="search">Search</string>
+    <string name="search_hint">Search...</string>
+    <string name="no_results">No results</string>
+    <string name="random_username">\@Leo_dv</string>
 </resources>
