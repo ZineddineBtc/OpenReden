@@ -37,4 +37,8 @@
     <string name="insufficient_username">Username must contain more than 4 characters</string>
     <string name="pictures">Pictures</string>
     <string name="no_pictures_to_display">No pictures to display</string>
+    <string name="no_conversations_to_display">No conversations to display</string>
+    <string name="random_name">Leonardo</string>
+    <string name="random_message">Hey</string>
+    <string name="random_time">13:30 PM</string>
 </resources>

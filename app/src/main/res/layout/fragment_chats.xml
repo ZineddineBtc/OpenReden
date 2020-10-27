@@ -2,11 +2,23 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <TextView
+        android:visibility="gone"
+        android:id="@+id/emptyChatsListTV"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/no_conversations_to_display"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/chatsRV"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+    <ProgressBar
+        android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Tab 2"
-        android:textSize="36sp" />
+        android:layout_centerInParent="true"/>
 
 </RelativeLayout>

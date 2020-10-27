@@ -286,6 +286,7 @@ public class SetProfileActivity extends AppCompatActivity {
         userReference.put("name", name);
         userReference.put("bio", bio);
         userReference.put("gallery", new ArrayList<String>());
+        userReference.put("chats", new ArrayList<String>());
         database.collection("users")
                 .document(email)
                 .set(userReference)
