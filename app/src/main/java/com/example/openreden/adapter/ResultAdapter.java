@@ -2,6 +2,7 @@ package com.example.openreden.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openreden.R;
 import com.example.openreden.StaticClass;
+import com.example.openreden.activity.core.ProfileActivity;
 import com.example.openreden.model.Chat;
 import com.example.openreden.model.User;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -133,6 +135,8 @@ public class ResultAdapter extends RecyclerView.Adapter<ResultAdapter.ViewHolder
             if (mClickListener != null)
                 mClickListener.onItemClick(view, getAdapterPosition());
 
+            context.startActivity(new Intent(context, ProfileActivity.class)
+            .putExtra(StaticClass.PROFILE_ID, user.getId()));
         }
     }
 

@@ -23,6 +23,7 @@ import android.widget.Toast;
 import android.widget.Toolbar;
 
 import com.example.openreden.R;
+import com.example.openreden.StaticClass;
 import com.example.openreden.adapter.ChatsAdapter;
 import com.example.openreden.adapter.ResultAdapter;
 import com.example.openreden.model.User;
@@ -44,6 +45,7 @@ public class SearchActivity extends AppCompatActivity {
     private ResultAdapter adapter;
     private ArrayList<User> usersList = new ArrayList<>();
     private FirebaseFirestore database;
+    private String email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +53,7 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search);
         Objects.requireNonNull(getSupportActionBar()).hide();
         database = FirebaseFirestore.getInstance();
+        email = getSharedPreferences(StaticClass.SHARED_PREFERENCES, MODE_PRIVATE).getString(StaticClass.EMAIL, "no email");
         findViewsByIds();
         setResultRV();
     }
@@ -96,6 +99,7 @@ public class SearchActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                         for(DocumentSnapshot document: queryDocumentSnapshots.getDocuments()){
+                            if(document.getId().equals(email)) continue;
                             usersList.add(new User(
                                     document.getId(),
                                     String.valueOf(document.get("username")),
