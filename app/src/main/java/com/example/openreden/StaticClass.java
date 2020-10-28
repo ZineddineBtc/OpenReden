@@ -23,6 +23,8 @@ public class StaticClass {
     public static String TO = "to";
     public static String FROM = "from";
     public static String PROFILE_FRAGMENT = "profile_fragment";
+    public static String PROFILE_ACTIVITY = "profile_activity";
+    public static String CHATS_FRAGMENT = "chats_fragment";
     public static String PROFILE_PHOTO = "-profilePhoto";
     public static String GALLERY = "gallery";
     public static int MAX_GALLERY_COUNT = 3;

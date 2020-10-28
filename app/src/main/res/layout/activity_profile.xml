@@ -14,17 +14,26 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/photoIV"
+            <RelativeLayout
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:layout_gravity="center"
-                android:background="#ffffff"
-                android:src="@drawable/ic_account_circle_grey"
-                app:civ_border_color="#ffffff"
-                app:civ_border_width="2dp"
                 android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"/>
+                android:layout_marginBottom="5dp"
+                android:layout_gravity="center">
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/photoIV"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#ffffff"
+                    android:src="@drawable/ic_account_circle_grey"
+                    app:civ_border_color="#ffffff"
+                    app:civ_border_width="2dp"/>
+                <ProgressBar
+                    android:id="@+id/profilePhotoPB"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true" />
+            </RelativeLayout>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -141,6 +150,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
                 </androidx.viewpager.widget.ViewPager>
+                <ProgressBar
+                    android:id="@+id/galleryPB"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"/>
             </RelativeLayout>
             <LinearLayout
                 android:id="@+id/galleryDotsLL"

@@ -104,6 +104,8 @@ public class CoreActivity extends AppCompatActivity {
         if(to != null) {
             if (to.equals(StaticClass.PROFILE_FRAGMENT)){
                 position = 2;
+            }else if(to.equals(StaticClass.CHATS_FRAGMENT)) {
+                position = 1;
             }
         }
         viewPager.setCurrentItem(position);

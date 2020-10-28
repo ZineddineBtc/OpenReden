@@ -4,13 +4,16 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,11 +30,13 @@ import com.google.firebase.storage.FirebaseStorage;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Objects;
 
 public class ProfileActivity extends AppCompatActivity {
 
     private ImageView photoIV;
     private TextView usernameTV, nameTV, bioTV, emptyGalleryTV;
+    private ProgressBar profilePhotoPB, galleryPB;
     private ViewPager galleryVP;
     private GalleryAdapter galleryAdapter;
     private ArrayList<Photo> galleryPhotos = new ArrayList<>();
@@ -40,7 +45,6 @@ public class ProfileActivity extends AppCompatActivity {
     private int dotsCount;
     private FirebaseFirestore database;
     private FirebaseStorage storage;
-    private SharedPreferences sharedPreferences;
     private String profileID;
 
     @Override
@@ -56,13 +60,14 @@ public class ProfileActivity extends AppCompatActivity {
         profileID = getIntent().getStringExtra(StaticClass.PROFILE_ID);
         database = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
-        sharedPreferences = getSharedPreferences(StaticClass.SHARED_PREFERENCES, MODE_PRIVATE);
     }
     private void findViewsByIds(){
         photoIV = findViewById(R.id.photoIV);
         usernameTV = findViewById(R.id.usernameTV);
         nameTV = findViewById(R.id.nameTV);
         bioTV = findViewById(R.id.bioTV);
+        profilePhotoPB = findViewById(R.id.profilePhotoPB);
+        galleryPB = findViewById(R.id.galleryPB);
         emptyGalleryTV = findViewById(R.id.emptyGalleryTV);
         galleryVP = findViewById(R.id.galleryVP);
         galleryDotsLL = findViewById(R.id.galleryDotsLL);
@@ -86,6 +91,7 @@ public class ProfileActivity extends AppCompatActivity {
         Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         photoIV.setImageBitmap(Bitmap.createScaledBitmap(bmp, photoIV.getWidth(),
                 photoIV.getHeight(), false));
+        profilePhotoPB.setVisibility(View.GONE);
     }
     private void setProfileData(){
         database.collection("users")
@@ -96,7 +102,9 @@ public class ProfileActivity extends AppCompatActivity {
                     public void onSuccess(DocumentSnapshot document) {
                         if(document.exists()){
                             usernameTV.setText(String.valueOf(document.get("username")));
-                            nameTV.setText(String.valueOf(document.get("name")));
+                            String name = String.valueOf(document.get("name"));
+                            nameTV.setText(name);
+                            setActionBarTitle(name);
                             bioTV.setText(String.valueOf(document.get("bio")));
                             getGalleryPhotos((ArrayList<String>)document.get("gallery"));
                         }
@@ -136,6 +144,7 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
     private void setGallery(){
+        galleryPB.setVisibility(View.GONE);
         galleryVP.setVisibility(galleryPhotos.isEmpty() ? View.GONE : View.VISIBLE);
         emptyGalleryTV.setVisibility(!galleryPhotos.isEmpty() ? View.GONE : View.VISIBLE);
         if(galleryPhotos.isEmpty()) {
@@ -171,6 +180,15 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
     public void message(View view){
-        //open discussion activity
+        startActivity(new Intent(getApplicationContext(), ChatActivity.class)
+        .putExtra(StaticClass.PROFILE_ID, profileID)
+        .putExtra(StaticClass.FROM, StaticClass.PROFILE_ACTIVITY));
+    }
+    public void setActionBarTitle(String title){
+        Objects.requireNonNull(getSupportActionBar()).setHomeAsUpIndicator(R.drawable.ic_message_white_24dp);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setTitle(
+                Html.fromHtml("<font color=\"#ffffff\"> "+title+" </font>")
+        );
     }
 }

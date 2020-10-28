@@ -1,11 +1,11 @@
 package com.example.openreden.model;
 
 public class Message {
-    private String content, time;
+    private String content, sender;
 
-    public Message(String content, String time) {
+    public Message(String content, String sender) {
         this.content = content;
-        this.time = time;
+        this.sender = sender;
     }
 
     public String getContent() {
@@ -16,11 +16,11 @@ public class Message {
         this.content = content;
     }
 
-    public String getTime() {
-        return time;
+    public String getSender() {
+        return sender;
     }
 
-    public void setTime(String time) {
-        this.time = time;
+    public void setSender(String sender) {
+        this.sender = sender;
     }
 }
