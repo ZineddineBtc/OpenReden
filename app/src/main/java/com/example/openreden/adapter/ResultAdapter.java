@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,7 +36,6 @@ public class ResultAdapter extends RecyclerView.Adapter<ResultAdapter.ViewHolder
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
     private Context context;
-    private int position;
 
     public ResultAdapter(Context context, List<User> data) {
         this.mInflater = LayoutInflater.from(context);
@@ -51,7 +51,55 @@ public class ResultAdapter extends RecyclerView.Adapter<ResultAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        this.position = position;
+        final User user = usersList.get(position);
+        setProfilePhoto(holder, user);
+        setProfileName(holder, user);
+        holder.parentLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                context.startActivity(new Intent(context, ProfileActivity.class)
+                        .putExtra(StaticClass.PROFILE_ID, user.getId()));
+            }
+        });
+    }
+    private void setProfilePhoto(final ViewHolder holder, User user){
+        final long ONE_MEGABYTE = 1024 * 1024;
+        holder.storage.getReference(user.getId() + StaticClass.PROFILE_PHOTO)
+                .getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                holder.profilePhotoIV.setImageBitmap(
+                        Bitmap.createScaledBitmap(bmp, holder.profilePhotoIV.getWidth(),
+                                holder.profilePhotoIV.getHeight(), false));
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Toast.makeText(context, "Failed at getting profile photo", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    private void setProfileName(final ViewHolder holder, User user){
+        holder.database.collection("users")
+                .document(user.getId())
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @SuppressLint("SetTextI18n")
+                    @Override
+                    public void onSuccess(DocumentSnapshot document) {
+                        if(document.exists()){
+                            holder.profileUsernameTV.setText("@"+document.get("username"));
+                            holder.profileNameTV.setText(String.valueOf(document.get("name")));
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(context, "Failed at getting profile name", Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     @Override
@@ -64,79 +112,33 @@ public class ResultAdapter extends RecyclerView.Adapter<ResultAdapter.ViewHolder
 
         private ImageView profilePhotoIV;
         private TextView profileUsernameTV, profileNameTV;
+        private LinearLayout parentLayout;
         private View itemView;
         private FirebaseStorage storage;
         private FirebaseFirestore database;
-        private User user;
-        private String email;
 
         ViewHolder(final View itemView) {
             super(itemView);
             this.itemView = itemView;
             getInstances();
             findViewsByIds();
-            setProfilePhoto();
-            setProfileName();
             itemView.setOnClickListener(this);
         }
         void getInstances(){
             database = FirebaseFirestore.getInstance();
             storage = FirebaseStorage.getInstance();
-            email = context.getSharedPreferences(StaticClass.SHARED_PREFERENCES, Context.MODE_PRIVATE).getString(StaticClass.EMAIL, "email");
-            user = usersList.get(position);
         }
         void findViewsByIds(){
+            parentLayout = itemView.findViewById(R.id.parentLayout);
             profileUsernameTV = itemView.findViewById(R.id.profileUsernameTV);
             profileNameTV = itemView.findViewById(R.id.profileNameTV);
             profilePhotoIV = itemView.findViewById(R.id.profilePhotoIV);
-        }
-        void setProfilePhoto(){
-            final long ONE_MEGABYTE = 1024 * 1024;
-            storage.getReference(user.getId() + StaticClass.PROFILE_PHOTO)
-                    .getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                @Override
-                public void onSuccess(byte[] bytes) {
-                    Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    profilePhotoIV.setImageBitmap(
-                            Bitmap.createScaledBitmap(bmp, profilePhotoIV.getWidth(),
-                                    profilePhotoIV.getHeight(), false));
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    Toast.makeText(context, "Failed at getting profile photo", Toast.LENGTH_LONG).show();
-                }
-            });
-        }
-        void setProfileName(){
-            database.collection("users")
-                    .document(user.getId())
-                    .get()
-                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                        @SuppressLint("SetTextI18n")
-                        @Override
-                        public void onSuccess(DocumentSnapshot document) {
-                            if(document.exists()){
-                                profileUsernameTV.setText("@"+document.get("username"));
-                                profileNameTV.setText(String.valueOf(document.get("name")));
-                            }
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(context, "Failed at getting profile name", Toast.LENGTH_LONG).show();
-                        }
-                    });
         }
 
         @Override
         public void onClick(View view) {
             if (mClickListener != null)
                 mClickListener.onItemClick(view, getAdapterPosition());
-
-            context.startActivity(new Intent(context, ProfileActivity.class)
-            .putExtra(StaticClass.PROFILE_ID, user.getId()));
         }
     }
 

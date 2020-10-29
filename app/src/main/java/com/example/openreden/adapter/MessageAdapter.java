@@ -3,6 +3,7 @@ package com.example.openreden.adapter;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,7 +54,21 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        this.position = position;
+        Message message = messagesList.get(position);
+        setMessage(holder, message);
+    }
+
+    private void setMessage(ViewHolder holder, Message message){
+        holder.messageTV.setText(message.getContent());
+        if(message.getSender().equals(userID)){
+            holder.messageTV.setBackgroundColor(context.getColor(R.color.special));
+            holder.parentLayout.setGravity(Gravity.END);
+        }else{
+            holder.messageTV.setBackgroundColor(context.getColor(R.color.grey));
+            holder.parentLayout.setGravity(Gravity.START);
+        }
+
+
     }
 
     @Override
@@ -67,27 +82,18 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         private LinearLayout parentLayout;
         private TextView messageTV;
         private View itemView;
-        private Message message;
 
         ViewHolder(final View itemView) {
             super(itemView);
             this.itemView = itemView;
-            message = messagesList.get(position);
             findViewsByIds();
-            setMessage();
             itemView.setOnClickListener(this);
         }
         void findViewsByIds(){
             parentLayout = itemView.findViewById(R.id.parentLayout);
             messageTV = itemView.findViewById(R.id.messageTV);
         }
-        void setMessage(){
-            messageTV.setText(message.getContent());
-            parentLayout.setBackgroundColor(
-                    context.getColor(message.getSender().equals(userID)?
-                    R.color.special : R.color.light_grey));
 
-        }
 
         @Override
         public void onClick(View view) {

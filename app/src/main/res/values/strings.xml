@@ -47,4 +47,7 @@
     <string name="random_username">\@Leo_dv</string>
     <string name="message">Message</string>
     <string name="aa">Aa</string>
+    <string name="interlocutor">Interlocutor</string>
+    <string name="three_dots">...</string>
+    <string name="general_time">99:99 MM</string>
 </resources>

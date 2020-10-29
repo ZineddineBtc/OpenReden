@@ -3,7 +3,8 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white">
+    android:background="@color/white"
+    android:id="@+id/parentLayout">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/interlocutorIV"
@@ -21,7 +22,7 @@
             android:id="@+id/interlocutorTV"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/random_name"
+            android:text="@string/interlocutor"
             android:textSize="16sp"/>
         <LinearLayout
             android:layout_width="match_parent"
@@ -31,13 +32,13 @@
                 android:id="@+id/lastMessageContentTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/random_message"
+                android:text="@string/three_dots"
                 android:layout_marginEnd="10dp"/>
             <TextView
                 android:id="@+id/lastMessageTimeTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/random_time"
+                android:text="@string/general_time"
                 android:textSize="12sp"/>
         </LinearLayout>
     </LinearLayout>
