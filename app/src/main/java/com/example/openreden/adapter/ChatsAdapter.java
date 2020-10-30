@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openreden.R;
 import com.example.openreden.StaticClass;
-import com.example.openreden.activity.core.ChatActivity;
+import com.example.openreden.activity.core.MessagesActivity;
 import com.example.openreden.model.Chat;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -25,7 +25,9 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ViewHolder> {
@@ -54,10 +56,11 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ViewHolder> 
         setInterlocutorPhoto(holder);
         setInterlocutorName(holder);
         setLastMessageContent(holder, chat);
+        setLastMessageTime(holder, chat);
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                context.startActivity(new Intent(context, ChatActivity.class)
+                context.startActivity(new Intent(context, MessagesActivity.class)
                         .putExtra(StaticClass.PROFILE_ID, holder.interlocutorID)
                         .putExtra(StaticClass.FROM, StaticClass.CHATS_FRAGMENT));
             }
@@ -116,6 +119,34 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ViewHolder> 
         }
         holder.lastMessageContentTV.setText(message);
     }
+    private void setLastMessageTime(ViewHolder holder, Chat chat){
+        long messageTime = chat.getLastMessageTime();
+        long currentTime = System.currentTimeMillis();
+        long difference = currentTime - messageTime;
+        String time;
+        Toast.makeText(context, "difference: "+messageTime, Toast.LENGTH_LONG).show();
+        if(difference < 1000){ // less than a minute
+            time = "now";
+        }else if(difference < 3600000){ // less than an hour
+            long minutes = difference/60000;
+            time = minutes+" Min";
+        }else if(difference < 86400000){ // less than a day
+            long hours = difference/3600000;
+            time = hours+" H";
+        }else{
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(messageTime);
+            int messageYear = c.get(Calendar.YEAR);
+            c.setTimeInMillis(currentTime);
+            int currentYear = c.get(Calendar.YEAR);
+            if(messageYear == currentYear){
+                time = new SimpleDateFormat("dd MMM").format(new Date(messageTime));
+            }else{
+                time = new SimpleDateFormat("dd MMM yyyy").format(new Date(messageTime));
+            }
+        }
+        holder.lastMessageTimeTV.setText(time);
+    }
 
     @Override
     public int getItemCount() {
@@ -126,7 +157,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ViewHolder> 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private ImageView interlocutorIV;
-        private TextView interlocutorTV, lastMessageContentTV;
+        private TextView interlocutorTV, lastMessageContentTV, lastMessageTimeTV;
         private LinearLayout parentLayout;
         private View itemView;
         private FirebaseStorage storage;
@@ -149,6 +180,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ViewHolder> 
             interlocutorIV = itemView.findViewById(R.id.interlocutorIV);
             interlocutorTV = itemView.findViewById(R.id.interlocutorTV);
             lastMessageContentTV = itemView.findViewById(R.id.lastMessageContentTV);
+            lastMessageTimeTV = itemView.findViewById(R.id.lastMessageTimeTV);
             parentLayout = itemView.findViewById(R.id.parentLayout);
         }
 

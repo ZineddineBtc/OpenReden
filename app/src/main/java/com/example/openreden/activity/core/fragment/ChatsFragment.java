@@ -36,11 +36,8 @@ public class ChatsFragment extends Fragment {
     private TextView emptyChatsListTV;
     private ProgressBar progressBar;
     private RecyclerView chatsRV;
-    private ChatsAdapter adapter;
     private ArrayList<Chat> chatsList = new ArrayList<>();
-    private FirebaseStorage storage;
     private FirebaseFirestore database;
-    private SharedPreferences sharedPreferences;
     private String email;
     private boolean isAdapterSet;
 
@@ -54,9 +51,8 @@ public class ChatsFragment extends Fragment {
         return fragmentView;
     }
     private void getInstances(){
-        storage = FirebaseStorage.getInstance();
         database = FirebaseFirestore.getInstance();
-        sharedPreferences = context.getSharedPreferences(StaticClass.SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(StaticClass.SHARED_PREFERENCES, Context.MODE_PRIVATE);
         email = sharedPreferences.getString(StaticClass.EMAIL, "no email");
     }
     private void findViewsByIds(){
@@ -65,7 +61,7 @@ public class ChatsFragment extends Fragment {
         chatsRV = fragmentView.findViewById(R.id.chatsRV);
     }
     private void setChatsRV(){
-        adapter = new ChatsAdapter(context, chatsList);
+        ChatsAdapter adapter = new ChatsAdapter(context, chatsList);
         chatsRV.setLayoutManager(new LinearLayoutManager(context,
                 LinearLayoutManager.VERTICAL, false));
         chatsRV.setAdapter(adapter);
@@ -83,7 +79,8 @@ public class ChatsFragment extends Fragment {
                                 chatsList.add(new Chat(
                                         document.getId(),
                                         (ArrayList<String>) document.get("interlocutors"),
-                                        String.valueOf(document.get("last-message-content"))
+                                        String.valueOf(document.get("last-message-content")),
+                                        (long) document.get("last-message-time")
                                 ));
                                 if(!isAdapterSet) {
                                     setChatsRV();

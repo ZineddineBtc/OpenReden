@@ -1,6 +1,7 @@
 package com.example.openreden.activity.core;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -11,6 +12,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -27,8 +29,10 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 
@@ -39,10 +43,10 @@ import java.util.Objects;
 
 import java.lang.System;
 
-public class ChatActivity extends AppCompatActivity {
+public class MessagesActivity extends AppCompatActivity {
 
     private ImageView interlocutorPhotoIV;
-    private TextView interlocutorUsernameTV, interlocutorNameTV;
+    private TextView interlocutorUsernameTV, interlocutorNameTV, textET;
     private RecyclerView messagesRV;
     private MessageAdapter adapter;
     private ArrayList<Message> messages = new ArrayList<>();
@@ -52,13 +56,12 @@ public class ChatActivity extends AppCompatActivity {
     private DocumentReference messageReference;
     private Map<String, Object> messageMap = new HashMap<>(), chatMap = new HashMap<>();
     private Message message = new Message();
-    private String email, interlocutorID, from, chatReference, content;
-TextView error;
+    private String email, interlocutorID, from, chatReference, content,
+            fetched = "-fetched", emailFetched, interlocutorFetched;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat);
-        error = findViewById(R.id.error);
+        setContentView(R.layout.activity_messages);
         getInstances();
         findViewsByIds();
         setInterlocutorPhoto();
@@ -68,8 +71,12 @@ TextView error;
     private void getInstances(){
         Objects.requireNonNull(getSupportActionBar()).hide();
         interlocutorID = getIntent().getStringExtra(StaticClass.PROFILE_ID);
+        interlocutorFetched = Objects.requireNonNull(interlocutorID)
+                .replace(".", "-")+fetched;
         from = getIntent().getStringExtra(StaticClass.FROM);
         email = getSharedPreferences(StaticClass.SHARED_PREFERENCES, MODE_PRIVATE).getString(StaticClass.EMAIL, "no email");
+        emailFetched = Objects.requireNonNull(email)
+                .replace(".", "-")+fetched;
         database = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
         progressDialog = new ProgressDialog(this);
@@ -83,7 +90,7 @@ TextView error;
                 onBackPressed();
             }
         });
-        final EditText textET = findViewById(R.id.textET);
+        textET = findViewById(R.id.textET);
         ImageView sendTextIV = findViewById(R.id.sendTextIV);
         sendTextIV.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -180,11 +187,15 @@ TextView error;
                                 messages.add(new Message(
                                         document.getId(),
                                         String.valueOf(document.get("content")),
-                                        String.valueOf(document.get("sender"))
+                                        String.valueOf(document.get("sender")),
+                                        (long) document.get("time")
                                 ));
                                 adapter.notifyDataSetChanged();
+                                boolean fetched = (boolean) document.get(emailFetched);
+                                if(!fetched) setMessageFetched(document.getId());
                             }
                         }
+                        setMessageListener();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -193,6 +204,36 @@ TextView error;
                         Log.d("TAG", e.getMessage());
                     }
                 });
+    }
+    private void setMessageListener(){
+        database.collection("messages")
+                .whereEqualTo(emailFetched, false)
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                        if(error != null){
+                            Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
+                        }else{
+                            for(QueryDocumentSnapshot document: value) {
+                                if (document != null && document.exists()) {
+                                    messages.add(new Message(
+                                            document.getId(),
+                                            String.valueOf(document.get("content")),
+                                            String.valueOf(document.get("sender")),
+                                            (long) document.get("time")
+                                    ));
+                                    adapter.notifyDataSetChanged();
+                                    setMessageFetched(document.getId());
+                                }
+                            }
+                        }
+                    }
+                });
+    }
+    private void setMessageFetched(String messageID){
+        database.collection("messages")
+                .document(messageID)
+                .update(email, true);
     }
     private void setMessage(){
         message.setContent(content);
@@ -205,6 +246,8 @@ TextView error;
         messageMap.put("receiver", interlocutorID);
         messageMap.put("chat", chatReference);
         messageMap.put("time", message.getTime());
+        messageMap.put(emailFetched, true);
+        messageMap.put(interlocutorFetched, false);
     }
     private void send(){
         setMessage();
@@ -216,6 +259,7 @@ TextView error;
                     public void onSuccess(Void aVoid) {
                         messages.add(message);
                         adapter.notifyDataSetChanged();
+                        textET.setText("");
                         updateChatDB();
                     }
                 })

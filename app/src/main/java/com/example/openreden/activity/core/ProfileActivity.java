@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -27,9 +26,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Objects;
 
 public class ProfileActivity extends AppCompatActivity {
@@ -180,7 +177,7 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
     public void message(View view){
-        startActivity(new Intent(getApplicationContext(), ChatActivity.class)
+        startActivity(new Intent(getApplicationContext(), MessagesActivity.class)
         .putExtra(StaticClass.PROFILE_ID, profileID)
         .putExtra(StaticClass.FROM, StaticClass.PROFILE_ACTIVITY));
     }

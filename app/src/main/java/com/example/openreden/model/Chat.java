@@ -3,7 +3,8 @@ package com.example.openreden.model;
 import java.util.ArrayList;
 
 public class Chat {
-    private String id, lastMessageContent, lastMessageTime;
+    private String id, lastMessageContent;
+    private long lastMessageTime;
     private ArrayList<String> interlocutors;
 
 
@@ -15,7 +16,7 @@ public class Chat {
     }
 
     public Chat(String id, ArrayList<String> interlocutors,
-                String lastMessageContent, String lastMessageTime) {
+                String lastMessageContent, long lastMessageTime) {
         this.id = id;
         this.interlocutors = interlocutors;
         this.lastMessageContent = lastMessageContent;
@@ -38,11 +39,11 @@ public class Chat {
         this.lastMessageContent = lastMessageContent;
     }
 
-    public String getLastMessageTime() {
+    public long getLastMessageTime() {
         return lastMessageTime;
     }
 
-    public void setLastMessageTime(String lastMessageTime) {
+    public void setLastMessageTime(long lastMessageTime) {
         this.lastMessageTime = lastMessageTime;
     }
 

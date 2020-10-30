@@ -15,10 +15,11 @@ public class Message {
         this.time = time;
     }
 
-    public Message(String id, String content, String sender) {
+    public Message(String id, String content, String sender, long time) {
         this.id = id;
         this.content = content;
         this.sender = sender;
+        this.time = time;
     }
 
     public String getId() {
