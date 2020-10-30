@@ -2,6 +2,18 @@ package com.example.openreden.model;
 
 public class Message {
     private String id, content, sender;
+    private long time;
+
+    public Message() {
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public void setTime(long time) {
+        this.time = time;
+    }
 
     public Message(String id, String content, String sender) {
         this.id = id;

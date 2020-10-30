@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -24,33 +25,40 @@ import com.example.openreden.adapter.MessageAdapter;
 import com.example.openreden.model.Message;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+
+import java.lang.System;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private Toolbar toolbar;
-    private ImageView interlocutorPhotoIV, backIV;
+    private ImageView interlocutorPhotoIV;
     private TextView interlocutorUsernameTV, interlocutorNameTV;
-    private EditText textET;
     private RecyclerView messagesRV;
     private MessageAdapter adapter;
     private ArrayList<Message> messages = new ArrayList<>();
     private ProgressDialog progressDialog;
     private FirebaseFirestore database;
     private FirebaseStorage storage;
-    private String email, profileID, from;
-
+    private DocumentReference messageReference;
+    private Map<String, Object> messageMap = new HashMap<>(), chatMap = new HashMap<>();
+    private Message message = new Message();
+    private String email, interlocutorID, from, chatReference, content;
+TextView error;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        error = findViewById(R.id.error);
         getInstances();
         findViewsByIds();
         setInterlocutorPhoto();
@@ -59,7 +67,7 @@ public class ChatActivity extends AppCompatActivity {
     }
     private void getInstances(){
         Objects.requireNonNull(getSupportActionBar()).hide();
-        profileID = getIntent().getStringExtra(StaticClass.PROFILE_ID);
+        interlocutorID = getIntent().getStringExtra(StaticClass.PROFILE_ID);
         from = getIntent().getStringExtra(StaticClass.FROM);
         email = getSharedPreferences(StaticClass.SHARED_PREFERENCES, MODE_PRIVATE).getString(StaticClass.EMAIL, "no email");
         database = FirebaseFirestore.getInstance();
@@ -67,25 +75,33 @@ public class ChatActivity extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
     }
     private void findViewsByIds(){
-        toolbar = findViewById(R.id.toolbar);
-        backIV = toolbar.findViewById(R.id.backIV);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        ImageView backIV = toolbar.findViewById(R.id.backIV);
         backIV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onBackPressed();
             }
         });
+        final EditText textET = findViewById(R.id.textET);
+        ImageView sendTextIV = findViewById(R.id.sendTextIV);
+        sendTextIV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                content = textET.getText().toString().trim();
+                if (!content.isEmpty()) send();
+            }
+        });
         interlocutorPhotoIV = toolbar.findViewById(R.id.interlocutorPhotoIV);
         interlocutorUsernameTV = toolbar.findViewById(R.id.interlocutorUsernameTV);
         interlocutorNameTV = toolbar.findViewById(R.id.interlocutorNameTV);
-        textET = findViewById(R.id.textET);
         messagesRV = findViewById(R.id.messagesRV);
     }
     private void setInterlocutorPhoto(){
         progressDialog.setMessage("Loading...");
         progressDialog.show();
         final long ONE_MEGABYTE = 1024 * 1024;
-        storage.getReference(profileID + StaticClass.PROFILE_PHOTO)
+        storage.getReference(interlocutorID + StaticClass.PROFILE_PHOTO)
                 .getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override
             public void onSuccess(byte[] bytes) {
@@ -103,7 +119,7 @@ public class ChatActivity extends AppCompatActivity {
     }
     private void setInterlocutorName(){
         database.collection("users")
-                .document(profileID)
+                .document(interlocutorID)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @SuppressLint("SetTextI18n")
@@ -124,9 +140,9 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
     private void setMessagesRV(){
-        adapter = new MessageAdapter(getApplicationContext(), messages, email, profileID);
+        adapter = new MessageAdapter(getApplicationContext(), messages, email, interlocutorID);
         messagesRV.setLayoutManager(new LinearLayoutManager(getApplicationContext(),
-                LinearLayoutManager.VERTICAL, true));
+                LinearLayoutManager.VERTICAL, false));
         messagesRV.setAdapter(adapter);
     }
     private void getChatReference(){
@@ -138,7 +154,8 @@ public class ChatActivity extends AppCompatActivity {
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                         for(DocumentSnapshot document: queryDocumentSnapshots){
                             if(document.exists()){
-                                getMessages(document.getId());
+                                chatReference = document.getId();
+                                getMessages();
                             }
                         }
                     }
@@ -150,9 +167,10 @@ public class ChatActivity extends AppCompatActivity {
                     }
                 });
     }
-    private void getMessages(String chatReference) {
+    private void getMessages() {
         database.collection("messages")
                 .whereEqualTo("chat", chatReference)
+                .orderBy("time")
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
@@ -165,7 +183,6 @@ public class ChatActivity extends AppCompatActivity {
                                         String.valueOf(document.get("sender"))
                                 ));
                                 adapter.notifyDataSetChanged();
-                                Toast.makeText(getApplicationContext(), document.getId(), Toast.LENGTH_LONG).show();
                             }
                         }
                     }
@@ -173,7 +190,61 @@ public class ChatActivity extends AppCompatActivity {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getApplicationContext(), "failed at getting messages", Toast.LENGTH_LONG).show();
+                        Log.d("TAG", e.getMessage());
+                    }
+                });
+    }
+    private void setMessage(){
+        message.setContent(content);
+        message.setSender(email);
+        message.setTime(System.currentTimeMillis());
+    }
+    private void putMessageMap(){
+        messageMap.put("content", message.getContent());
+        messageMap.put("sender", message.getSender());
+        messageMap.put("receiver", interlocutorID);
+        messageMap.put("chat", chatReference);
+        messageMap.put("time", message.getTime());
+    }
+    private void send(){
+        setMessage();
+        putMessageMap();
+        messageReference = database.collection("messages").document();
+        messageReference.set(messageMap)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        messages.add(message);
+                        adapter.notifyDataSetChanged();
+                        updateChatDB();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(),
+                                "Error sending message",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+    private void putChatMap(){
+        chatMap.put("last-message-content", message.getContent());
+        chatMap.put("sender", message.getSender());
+        chatMap.put("messages", messageReference.getId());
+        chatMap.put("last-message-time", message.getTime());
+    }
+    private void updateChatDB(){
+        putChatMap();
+        database.collection("chats")
+                .document(chatReference)
+                .update(chatMap)
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(),
+                                "Error updating chatDB",
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -181,10 +252,10 @@ public class ChatActivity extends AppCompatActivity {
     public void onBackPressed() {
         if(from.equals(StaticClass.PROFILE_ACTIVITY)) {
             startActivity(new Intent(getApplicationContext(), ProfileActivity.class)
-                    .putExtra(StaticClass.PROFILE_ID, profileID));
+                    .putExtra(StaticClass.PROFILE_ID, interlocutorID));
         }else if(from.equals(StaticClass.CHATS_FRAGMENT)) {
             startActivity(new Intent(getApplicationContext(), CoreActivity.class)
-                    .putExtra(StaticClass.PROFILE_ID, profileID)
+                    .putExtra(StaticClass.PROFILE_ID, interlocutorID)
                     .putExtra(StaticClass.TO, StaticClass.CHATS_FRAGMENT));
         }
     }

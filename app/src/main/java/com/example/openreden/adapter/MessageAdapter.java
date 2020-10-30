@@ -60,13 +60,20 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
     private void setMessage(ViewHolder holder, Message message){
         holder.messageTV.setText(message.getContent());
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
         if(message.getSender().equals(userID)){
             holder.messageTV.setBackgroundColor(context.getColor(R.color.special));
             holder.parentLayout.setGravity(Gravity.END);
+            params.setMargins(50, 10, 10, 10);
         }else{
             holder.messageTV.setBackgroundColor(context.getColor(R.color.grey));
             holder.parentLayout.setGravity(Gravity.START);
+            params.setMargins(10, 10, 50, 10);
         }
+        holder.parentLayout.setLayoutParams(params);
 
 
     }

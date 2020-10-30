@@ -10,6 +10,11 @@
     <include layout="@layout/chat_bar"
         android:id="@+id/toolbar"/>
 
+    <TextView
+        android:id="@+id/error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toolbar"/>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messagesRV"
         android:layout_width="match_parent"
