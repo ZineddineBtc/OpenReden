@@ -125,7 +125,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ViewHolder> 
         long difference = currentTime - messageTime;
         String time;
         Toast.makeText(context, "difference: "+messageTime, Toast.LENGTH_LONG).show();
-        if(difference < 1000){ // less than a minute
+        if(difference < 60000){ // less than a minute
             time = "now";
         }else if(difference < 3600000){ // less than an hour
             long minutes = difference/60000;

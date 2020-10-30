@@ -233,7 +233,7 @@ public class MessagesActivity extends AppCompatActivity {
     private void setMessageFetched(String messageID){
         database.collection("messages")
                 .document(messageID)
-                .update(email, true);
+                .update(emailFetched, true);
     }
     private void setMessage(){
         message.setContent(content);
