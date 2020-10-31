@@ -5,6 +5,7 @@ import java.util.ArrayList;
 public class Chat {
     private String id, lastMessageContent;
     private long lastMessageTime;
+    private boolean isRead;
     private ArrayList<String> interlocutors;
 
 
@@ -16,11 +17,20 @@ public class Chat {
     }
 
     public Chat(String id, ArrayList<String> interlocutors,
-                String lastMessageContent, long lastMessageTime) {
+                String lastMessageContent, long lastMessageTime, boolean isRead) {
         this.id = id;
         this.interlocutors = interlocutors;
         this.lastMessageContent = lastMessageContent;
         this.lastMessageTime = lastMessageTime;
+        this.isRead = isRead;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
     }
 
     public String getId() {

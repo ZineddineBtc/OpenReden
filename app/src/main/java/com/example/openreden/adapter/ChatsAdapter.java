@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,6 +58,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ViewHolder> 
         setInterlocutorName(holder);
         setLastMessageContent(holder, chat);
         setLastMessageTime(holder, chat);
+        checkIfUnread(holder, chat);
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -124,7 +126,6 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ViewHolder> 
         long currentTime = System.currentTimeMillis();
         long difference = currentTime - messageTime;
         String time;
-        Toast.makeText(context, "difference: "+messageTime, Toast.LENGTH_LONG).show();
         if(difference < 60000){ // less than a minute
             time = "now";
         }else if(difference < 3600000){ // less than an hour
@@ -146,6 +147,13 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ViewHolder> 
             }
         }
         holder.lastMessageTimeTV.setText(time);
+    }
+    private void checkIfUnread(ViewHolder holder, Chat chat){
+        if(!chat.isRead()) {
+            holder.interlocutorTV.setTypeface(holder.interlocutorTV.getTypeface(), Typeface.BOLD);
+            holder.lastMessageContentTV.setTypeface(holder.lastMessageContentTV.getTypeface(), Typeface.BOLD);
+            holder.lastMessageTimeTV.setTypeface(holder.lastMessageTimeTV.getTypeface(), Typeface.BOLD);
+        }
     }
 
     @Override

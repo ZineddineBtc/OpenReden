@@ -32,6 +32,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
@@ -54,10 +55,10 @@ public class MessagesActivity extends AppCompatActivity {
     private FirebaseFirestore database;
     private FirebaseStorage storage;
     private DocumentReference messageReference;
+    private ArrayList<String> alreadyFetchedMessages = new ArrayList<>();
     private Map<String, Object> messageMap = new HashMap<>(), chatMap = new HashMap<>();
     private Message message = new Message();
-    private String email, interlocutorID, from, chatReference, content,
-            fetched = "-fetched", emailFetched, interlocutorFetched;
+    private String email, interlocutorID, from, chatReference, content, emailRead, interlocutorRead;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,12 +72,10 @@ public class MessagesActivity extends AppCompatActivity {
     private void getInstances(){
         Objects.requireNonNull(getSupportActionBar()).hide();
         interlocutorID = getIntent().getStringExtra(StaticClass.PROFILE_ID);
-        interlocutorFetched = Objects.requireNonNull(interlocutorID)
-                .replace(".", "-")+fetched;
+        interlocutorRead = interlocutorID.replace(".", "-")+"-read";
         from = getIntent().getStringExtra(StaticClass.FROM);
         email = getSharedPreferences(StaticClass.SHARED_PREFERENCES, MODE_PRIVATE).getString(StaticClass.EMAIL, "no email");
-        emailFetched = Objects.requireNonNull(email)
-                .replace(".", "-")+fetched;
+        emailRead = email.replace(".", "-")+"-read";
         database = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
         progressDialog = new ProgressDialog(this);
@@ -149,7 +148,7 @@ public class MessagesActivity extends AppCompatActivity {
     private void setMessagesRV(){
         adapter = new MessageAdapter(getApplicationContext(), messages, email, interlocutorID);
         messagesRV.setLayoutManager(new LinearLayoutManager(getApplicationContext(),
-                LinearLayoutManager.VERTICAL, false));
+                LinearLayoutManager.VERTICAL, true));
         messagesRV.setAdapter(adapter);
     }
     private void getChatReference(){
@@ -174,66 +173,39 @@ public class MessagesActivity extends AppCompatActivity {
                     }
                 });
     }
-    private void getMessages() {
+    private void getMessages(){
         database.collection("messages")
                 .whereEqualTo("chat", chatReference)
-                .orderBy("time")
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                    @Override
-                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        for (DocumentSnapshot document : queryDocumentSnapshots) {
-                            if (document.exists()) {
-                                messages.add(new Message(
-                                        document.getId(),
-                                        String.valueOf(document.get("content")),
-                                        String.valueOf(document.get("sender")),
-                                        (long) document.get("time")
-                                ));
-                                adapter.notifyDataSetChanged();
-                                boolean fetched = (boolean) document.get(emailFetched);
-                                if(!fetched) setMessageFetched(document.getId());
-                            }
-                        }
-                        setMessageListener();
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d("TAG", e.getMessage());
-                    }
-                });
-    }
-    private void setMessageListener(){
-        database.collection("messages")
-                .whereEqualTo(emailFetched, false)
+                .orderBy("time", Query.Direction.DESCENDING)
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
                         if(error != null){
                             Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
+                            Log.i("INDEX", error.getMessage());
                         }else{
                             for(QueryDocumentSnapshot document: value) {
-                                if (document != null && document.exists()) {
+                                if (document != null && document.exists() &&
+                                    !alreadyFetchedMessages.contains(document.getId())) {
                                     messages.add(new Message(
                                             document.getId(),
                                             String.valueOf(document.get("content")),
                                             String.valueOf(document.get("sender")),
                                             (long) document.get("time")
                                     ));
+                                    alreadyFetchedMessages.add(document.getId());
                                     adapter.notifyDataSetChanged();
-                                    setMessageFetched(document.getId());
+                                    setRead();
                                 }
                             }
                         }
                     }
                 });
     }
-    private void setMessageFetched(String messageID){
-        database.collection("messages")
-                .document(messageID)
-                .update(emailFetched, true);
+    private void setRead(){
+        database.collection("chats")
+                .document(chatReference)
+                .update(emailRead, true);
     }
     private void setMessage(){
         message.setContent(content);
@@ -246,8 +218,6 @@ public class MessagesActivity extends AppCompatActivity {
         messageMap.put("receiver", interlocutorID);
         messageMap.put("chat", chatReference);
         messageMap.put("time", message.getTime());
-        messageMap.put(emailFetched, true);
-        messageMap.put(interlocutorFetched, false);
     }
     private void send(){
         setMessage();
@@ -257,7 +227,6 @@ public class MessagesActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        messages.add(message);
                         adapter.notifyDataSetChanged();
                         textET.setText("");
                         updateChatDB();
@@ -277,6 +246,8 @@ public class MessagesActivity extends AppCompatActivity {
         chatMap.put("sender", message.getSender());
         chatMap.put("messages", messageReference.getId());
         chatMap.put("last-message-time", message.getTime());
+        chatMap.put(emailRead, true);
+        chatMap.put(interlocutorRead, false);
     }
     private void updateChatDB(){
         putChatMap();
