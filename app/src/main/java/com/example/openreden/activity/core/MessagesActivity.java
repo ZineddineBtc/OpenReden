@@ -12,10 +12,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,10 +53,10 @@ public class MessagesActivity extends AppCompatActivity {
     private FirebaseFirestore database;
     private FirebaseStorage storage;
     private DocumentReference messageReference;
-    private ArrayList<String> alreadyFetchedMessages = new ArrayList<>();
     private Map<String, Object> messageMap = new HashMap<>(), chatMap = new HashMap<>();
     private Message message = new Message();
-    private String email, interlocutorID, from, chatReference, content, emailRead, interlocutorRead;
+    private String email, interlocutorID, from, chatReference,
+            content, emailRead, interlocutorRead, interlocutorName;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -133,7 +131,8 @@ public class MessagesActivity extends AppCompatActivity {
                     public void onSuccess(DocumentSnapshot document) {
                         if(document.exists()){
                             interlocutorUsernameTV.setText("@"+document.get("username"));
-                            interlocutorNameTV.setText(String.valueOf(document.get("name")));
+                            interlocutorName = String.valueOf(document.get("name"));
+                            interlocutorNameTV.setText(interlocutorName);
                         }
                         progressDialog.dismiss();
                     }
@@ -184,17 +183,17 @@ public class MessagesActivity extends AppCompatActivity {
                             Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
                             Log.i("INDEX", error.getMessage());
                         }else{
+                            messages.clear();
                             for(QueryDocumentSnapshot document: value) {
-                                if (document != null && document.exists() &&
-                                    !alreadyFetchedMessages.contains(document.getId())) {
+                                if (document != null && document.exists()) {
                                     messages.add(new Message(
                                             document.getId(),
                                             String.valueOf(document.get("content")),
                                             String.valueOf(document.get("sender")),
                                             (long) document.get("time")
                                     ));
-                                    alreadyFetchedMessages.add(document.getId());
                                     adapter.notifyDataSetChanged();
+                                    messagesRV.smoothScrollToPosition(0);
                                     setRead();
                                 }
                             }
@@ -227,7 +226,7 @@ public class MessagesActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        adapter.notifyDataSetChanged();
+                        messagesRV.smoothScrollToPosition(0);
                         textET.setText("");
                         updateChatDB();
                     }
@@ -274,4 +273,5 @@ public class MessagesActivity extends AppCompatActivity {
                     .putExtra(StaticClass.TO, StaticClass.CHATS_FRAGMENT));
         }
     }
+
 }

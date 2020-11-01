@@ -60,11 +60,11 @@ public class ProfileFragment extends Fragment {
 
     private View fragmentView;
     private Context context;
-    private ImageView photoIV, editUsernameIV, editNameIV, editBioIV,
+    private ImageView photoIV, editUsernameIV, editNameIV, editBioIV, editCityIV,
             addGalleryPhotoIV, deleteGalleryPhotoIV;
-    private TextView usernameTV, nameTV, bioTV, emailTV, galleryTV, emptyGalleryTV,
+    private TextView usernameTV, nameTV, bioTV, cityTV, emailTV, galleryTV, emptyGalleryTV,
             signOutTV, errorTV;
-    private EditText usernameET, nameET, bioET;
+    private EditText usernameET, nameET, bioET, cityET;
     private ViewPager galleryVP;
     private GalleryAdapter galleryAdapter;
     private LinearLayout galleryDotsLL;
@@ -78,8 +78,8 @@ public class ProfileFragment extends Fragment {
     private SharedPreferences.Editor editor;
     private ArrayList<String> galleryReferences;
     private ArrayList<Photo> photos = new ArrayList<>();
-    private String username, name, email, galleryReference;
-    private boolean usernameETShown, nameETShown, bioETShown;
+    private String username, name, city, email, galleryReference;
+    private boolean usernameETShown, nameETShown, bioETShown, cityETShown;
     private byte[] profilePhotoData;
     private int loadingCount = 1, galleryReferenceIndex;
     @SuppressLint("StaticFieldLeak")
@@ -116,6 +116,9 @@ public class ProfileFragment extends Fragment {
         bioTV = fragmentView.findViewById(R.id.bioTV);
         bioET = fragmentView.findViewById(R.id.bioET);
         editBioIV = fragmentView.findViewById(R.id.editBioIV);
+        cityTV = fragmentView.findViewById(R.id.cityTV);
+        cityET = fragmentView.findViewById(R.id.cityET);
+        editCityIV = fragmentView.findViewById(R.id.editCityIV);
         emailTV = fragmentView.findViewById(R.id.emailTV);
         galleryTV = fragmentView.findViewById(R.id.galleryTV);
         addGalleryPhotoIV = fragmentView.findViewById(R.id.addGalleryPhotoIV);
@@ -142,6 +145,9 @@ public class ProfileFragment extends Fragment {
         String bio = sharedPreferences.getString(StaticClass.BIO, "no bio");
         bioTV.setText(bio);
         bioET.setText(bio);
+        city = sharedPreferences.getString(StaticClass.CITY, "no city");
+        cityTV.setText(city);
+        cityET.setText(city);
         emailTV.setText(email);
         setGallery();
         setListeners();
@@ -212,6 +218,12 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 editBio();
+            }
+        });
+        editCityIV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editCity();
             }
         });
         addGalleryPhotoIV.setOnClickListener(new View.OnClickListener() {
@@ -389,7 +401,7 @@ public class ProfileFragment extends Fragment {
         });
     }
     private void editUsername(){
-        if(nameETShown || bioETShown){
+        if(nameETShown || bioETShown || cityETShown){
             Toast.makeText(context, "Pending edit", Toast.LENGTH_LONG).show();
             return;
         }
@@ -477,7 +489,7 @@ public class ProfileFragment extends Fragment {
                 });
     }
     private void editName(){
-        if(usernameETShown || bioETShown){
+        if(usernameETShown || bioETShown || cityETShown){
             Toast.makeText(context, "Pending edit", Toast.LENGTH_LONG).show();
             return;
         }
@@ -534,7 +546,7 @@ public class ProfileFragment extends Fragment {
                 });
     }
     private void editBio(){
-        if(usernameETShown || nameETShown){
+        if(usernameETShown || nameETShown || cityETShown){
             Toast.makeText(context, "Pending edit", Toast.LENGTH_LONG).show();
             return;
         }
@@ -572,6 +584,63 @@ public class ProfileFragment extends Fragment {
                         setUserData();
                         Snackbar.make(fragmentView.findViewById(R.id.parentLayout),
                                 "Bio updated", 1000)
+                                .setAction("Action", null).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(fragmentView.getContext(),
+                                "Error writing name",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+    private void editCity(){
+        if(usernameETShown || nameETShown || bioETShown){
+            Toast.makeText(context, "Pending edit", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if(cityETShown){
+            String newCity = cityET.getText().toString();
+            if(newCity.length()>2){
+                if(!city.equals(newCity)){
+                    writeCity(newCity);
+                }
+            }else{
+                displayErrorTV(R.string.invalid_city);
+            }
+        }else{
+            toggleCity();
+        }
+    }
+    private void toggleCity(){
+        cityET.setVisibility(!cityETShown ? View.VISIBLE : View.GONE);
+        cityTV.setVisibility(cityETShown ? View.VISIBLE : View.GONE);
+        editCityIV.setImageDrawable(cityETShown ?
+                context.getDrawable(R.drawable.ic_edit) :
+                context.getDrawable(R.drawable.ic_check));
+        if(!cityETShown){
+            cityET.requestFocus();
+        }
+        cityETShown = !cityETShown;
+    }
+    private void writeCity(final String city){
+        Map<String, Object> userReference = new HashMap<>();
+        userReference.put("city", city);
+        database.collection("users")
+                .document(email)
+                .update(userReference)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        hideKeyboard();
+                        editor.putString(StaticClass.CITY, city);
+                        editor.apply();
+                        toggleCity();
+                        setUserData();
+                        Snackbar.make(fragmentView.findViewById(R.id.parentLayout),
+                                "City updated", 1000)
                                 .setAction("Action", null).show();
                     }
                 })

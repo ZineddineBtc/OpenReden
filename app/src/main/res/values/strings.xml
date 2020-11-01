@@ -50,4 +50,6 @@
     <string name="interlocutor">Interlocutor</string>
     <string name="three_dots">...</string>
     <string name="general_time">99:99 MM</string>
+    <string name="city">City</string>
+    <string name="invalid_city">Invalid city</string>
 </resources>

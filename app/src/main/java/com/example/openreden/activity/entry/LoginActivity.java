@@ -17,6 +17,7 @@ import com.example.openreden.R;
 import com.example.openreden.StaticClass;
 import com.example.openreden.activity.TermsActivity;
 import com.example.openreden.activity.core.CoreActivity;
+import com.example.openreden.model.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -79,18 +80,28 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 });
     }
-    public void setSharedPreferences(String email, String username, String name,
-                                     String bio, ArrayList<String> galleryReferences){
+    public void setSharedPreferences(User user){
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(StaticClass.USERNAME, username);
-        editor.putString(StaticClass.NAME, name);
-        editor.putString(StaticClass.BIO, bio);
-        editor.putStringSet(StaticClass.GALLERY, new HashSet<>(galleryReferences));
-        editor.putString(StaticClass.EMAIL, email);
+        editor.putString(StaticClass.USERNAME, user.getUsername());
+        editor.putString(StaticClass.NAME, user.getName());
+        editor.putString(StaticClass.BIO, user.getBio());
+        editor.putString(StaticClass.CITY, user.getCity());
+        editor.putStringSet(StaticClass.GALLERY, new HashSet<>(user.getGalleryReferences()));
+        editor.putString(StaticClass.EMAIL, user.getId());
         editor.apply();
         progressDialog.dismiss();
         startActivity(new Intent(
                 getApplicationContext(), CoreActivity.class));
+    }
+    public void setUser(DocumentSnapshot document){
+        User user = new User();
+        user.setId(document.getId());
+        user.setUsername(String.valueOf(document.get("username")));
+        user.setName(String.valueOf(document.get("name")));
+        user.setBio(String.valueOf(document.get("bio")));
+        user.setCity(String.valueOf(document.get("city")));
+        user.setGalleryReferences((ArrayList<String>)document.get("gallery"));
+        setSharedPreferences(user);
     }
     public void getDataByDocument(){
         DocumentReference documentReference =
@@ -102,12 +113,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
-                        setSharedPreferences(
-                                document.getId(),
-                                String.valueOf(document.get("username")),
-                                String.valueOf(document.get("name")),
-                                String.valueOf(document.get("bio")),
-                                (ArrayList<String>)document.get("gallery"));
+                        setUser(document);
                     }
                 } else {
                     Toast.makeText(getApplicationContext(),

@@ -32,15 +32,12 @@ import com.example.openreden.R;
 import com.example.openreden.StaticClass;
 import com.example.openreden.activity.TermsActivity;
 import com.example.openreden.activity.core.CoreActivity;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.UploadTask;
 
@@ -56,13 +53,13 @@ public class SetProfileActivity extends AppCompatActivity {
 
     private ImageView photoIV;
     private TextView errorTV;
-    private EditText usernameET, nameET, bioET;
+    private EditText usernameET, nameET, bioET, cityET;
     private ProgressDialog progressDialog;
     private FirebaseFirestore database;
     private FirebaseStorage storage;
     private SharedPreferences sharedPreferences;
     private ArrayList<String> usernameList = new ArrayList<>();
-    private String username, name, bio, email;
+    private String username, name, bio, email, city;
     private boolean imagePicked, usernameAvailable;
 
     @Override
@@ -132,6 +129,7 @@ public class SetProfileActivity extends AppCompatActivity {
         });
         nameET = findViewById(R.id.nameET);
         bioET = findViewById(R.id.bioET);
+        cityET = findViewById(R.id.cityET);
         Button finishButton = findViewById(R.id.finishButton);
         finishButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -226,6 +224,11 @@ public class SetProfileActivity extends AppCompatActivity {
             displayErrorTV(R.string.empty_bio);
             return;
         }
+        city = cityET.getText().toString().trim();
+        if(city.length()<2){
+            displayErrorTV(R.string.invalid_city);
+            return;
+        }
         progressDialog.show();
         progressDialog.setMessage("Setting up profile...");
         uploadPhoto();
@@ -255,10 +258,11 @@ public class SetProfileActivity extends AppCompatActivity {
     }
     private void writeSharedPreferences(){
         SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(StaticClass.EMAIL, email);
         editor.putString(StaticClass.USERNAME, username);
         editor.putString(StaticClass.NAME, name);
         editor.putString(StaticClass.BIO, bio);
-        editor.putString(StaticClass.EMAIL, email);
+        editor.putString(StaticClass.CITY, city);
         editor.putStringSet(StaticClass.GALLERY, new HashSet<>(new ArrayList<String>()));
         editor.apply();
         appendUsernameToDB();
@@ -285,6 +289,7 @@ public class SetProfileActivity extends AppCompatActivity {
         userReference.put("username", username);
         userReference.put("name", name);
         userReference.put("bio", bio);
+        userReference.put("city", city);
         userReference.put("gallery", new ArrayList<String>());
         userReference.put("chats", new ArrayList<String>());
         database.collection("users")

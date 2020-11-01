@@ -5,7 +5,6 @@ import androidx.viewpager.widget.ViewPager;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -18,6 +17,7 @@ import com.example.openreden.activity.core.fragment.ExploreFragment;
 import com.example.openreden.activity.core.fragment.ProfileFragment;
 import com.example.openreden.adapter.TabAdapter;
 import com.google.android.material.tabs.TabLayout;
+
 import static com.example.openreden.activity.core.fragment.ProfileFragment.photoOptionsLL;
 import static com.example.openreden.activity.core.fragment.ProfileFragment.photoOptionsShown;
 import static com.example.openreden.activity.core.fragment.ProfileFragment.shadeLL;
@@ -38,6 +38,7 @@ public class CoreActivity extends AppCompatActivity {
         findViewsByIds();
         setTabAdapter();
         setUI();
+
     }
     public void findViewsByIds(){
         toolbar = findViewById(R.id.toolbar);

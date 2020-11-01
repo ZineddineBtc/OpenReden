@@ -160,6 +160,28 @@
                 android:layout_gravity="center_vertical"
                 android:gravity="center_vertical"/>
         </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp">
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_weight="0.2"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_location_special"/>
+            <EditText
+                android:id="@+id/cityET"
+                android:layout_width="0dp"
+                android:layout_weight="0.8"
+                android:layout_height="40dp"
+                android:hint="@string/city"
+                android:textSize="14sp"
+                android:textColor="#000000"
+                android:background="@color/white"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"/>
+        </LinearLayout>
         <Button
             android:id="@+id/finishButton"
             android:text="@string/finish"
