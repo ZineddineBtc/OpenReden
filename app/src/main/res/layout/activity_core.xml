@@ -5,7 +5,8 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    tools:context=".activity.core.CoreActivity">
+    tools:context=".activity.core.CoreActivity"
+    android:background="@color/white">
     
     <include layout="@layout/core_bar" />
 

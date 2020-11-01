@@ -1,9 +1,13 @@
 package com.example.openreden.model;
 
+import android.graphics.Bitmap;
+
 import java.util.ArrayList;
 
 public class User {
     private String id, username, name, bio, city;
+    private Bitmap photoBitmap;
+    private byte[] bytes;
     private ArrayList<String> galleryReferences;
 
     public User(){}
@@ -11,6 +15,22 @@ public class User {
         this.id = id;
         this.username = username;
         this.name = name;
+    }
+
+    public byte[] getPhotoBytes() {
+        return bytes;
+    }
+
+    public void setPhotoBytes(byte[] bytes) {
+        this.bytes = bytes;
+    }
+
+    public Bitmap getPhotoBitmap() {
+        return photoBitmap;
+    }
+
+    public void setPhotoBitmap(Bitmap photoBitmap) {
+        this.photoBitmap = photoBitmap;
     }
 
     public String getBio() {
