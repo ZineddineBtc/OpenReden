@@ -70,7 +70,7 @@ public class ProfileActivity extends AppCompatActivity {
         galleryDotsLL = findViewById(R.id.galleryDotsLL);
     }
     private void getProfilePhoto(){
-        final long ONE_MEGABYTE = 1024 * 1024;
+        final long ONE_MEGABYTE = 1024 * 1024 * 20;
         storage.getReference(profileID + StaticClass.PROFILE_PHOTO)
                 .getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override

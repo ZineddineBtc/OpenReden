@@ -256,7 +256,7 @@ public class ProfileFragment extends Fragment {
         });
     }
     private void getPhoto(){
-        final long ONE_MEGABYTE = 1024 * 1024;
+        final long ONE_MEGABYTE = 1024 * 1024 * 20;
         storage.getReference(email + StaticClass.PROFILE_PHOTO)
                 .getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override

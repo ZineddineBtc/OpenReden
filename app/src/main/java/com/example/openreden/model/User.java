@@ -17,6 +17,14 @@ public class User {
         this.name = name;
     }
 
+    public User(String id, String username, String name, String bio, String city) {
+        this.id = id;
+        this.username = username;
+        this.name = name;
+        this.bio = bio;
+        this.city = city;
+    }
+
     public byte[] getPhotoBytes() {
         return bytes;
     }

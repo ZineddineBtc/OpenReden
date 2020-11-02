@@ -11,13 +11,18 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openreden.R;
 import com.example.openreden.StaticClass;
 import com.example.openreden.activity.core.ProfileActivity;
 import com.example.openreden.model.User;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
 
 import java.util.List;
 
@@ -44,7 +49,7 @@ public class GridRVAdapter extends RecyclerView.Adapter<GridRVAdapter.ViewHolder
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         final User user = usersList.get(position);
-       // setBytesToPhoto(user.getPhotoBytes(), holder);
+        setProfilePhoto(holder, user);
         holder.nameTV.setText(user.getName());
         holder.usernameTV.setText("@"+user.getUsername());
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
@@ -56,7 +61,21 @@ public class GridRVAdapter extends RecyclerView.Adapter<GridRVAdapter.ViewHolder
             }
         });
     }
-
+    private void setProfilePhoto(final ViewHolder holder, User user){
+        final long ONE_MEGABYTE = 1024 * 1024 * 20;
+        holder.storage.getReference(user.getId() + StaticClass.PROFILE_PHOTO)
+                .getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                setBytesToPhoto(bytes, holder);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Toast.makeText(context, "Failure", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
     private void setBytesToPhoto(byte[] bytes, ViewHolder holder){
         Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         holder.photoIV.setImageBitmap(
@@ -77,10 +96,12 @@ public class GridRVAdapter extends RecyclerView.Adapter<GridRVAdapter.ViewHolder
         private TextView nameTV, usernameTV;
         private LinearLayout parentLayout;
         private View itemView;
+        private FirebaseStorage storage;
 
         ViewHolder(final View itemView) {
             super(itemView);
             this.itemView = itemView;
+            storage = FirebaseStorage.getInstance();
             findViewsByIds();
             itemView.setOnClickListener(this);
         }
