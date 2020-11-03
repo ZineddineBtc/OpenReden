@@ -50,6 +50,7 @@ public class CoreActivity extends AppCompatActivity {
             }
         });
         viewPager = findViewById(R.id.viewPager);
+        viewPager.setOffscreenPageLimit(3);
         tabLayout = findViewById(R.id.tabLayout);
     }
     public void setTabAdapter(){
@@ -68,6 +69,9 @@ public class CoreActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int position) {
                 updateIcons(position);
+                getFragmentManager()
+                        .beginTransaction()
+                        .commit();
             }
             @Override public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }@Override public void onPageScrollStateChanged(int state) {}
         });
@@ -110,6 +114,9 @@ public class CoreActivity extends AppCompatActivity {
             }
         }
         viewPager.setCurrentItem(position);
+        getFragmentManager()
+                .beginTransaction()
+                .commit();
         updateIcons(position);
     }
     @Override

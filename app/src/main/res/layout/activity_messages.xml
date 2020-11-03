@@ -19,9 +19,18 @@
         android:id="@+id/messagesRV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/chatBottomLL"
+        android:layout_above="@+id/seenTV"
         android:layout_below="@+id/toolbar"
         android:paddingBottom="5dp"/>
+    <TextView
+        android:visibility="gone"
+        android:id="@+id/seenTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/seen"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/chatBottomLL"
+        android:layout_marginEnd="20dp"/>
     <RelativeLayout
         android:id="@+id/chatBottomLL"
         android:layout_width="match_parent"

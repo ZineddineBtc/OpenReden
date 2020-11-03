@@ -1,20 +1,11 @@
 package com.example.openreden.activity.core.fragment;
 
-import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -27,24 +18,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openreden.R;
 import com.example.openreden.StaticClass;
-import com.example.openreden.activity.core.CoreActivity;
 import com.example.openreden.adapter.GridRVAdapter;
 import com.example.openreden.model.User;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.UploadTask;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
 public class ExploreFragment extends Fragment {
 
@@ -144,4 +127,5 @@ public class ExploreFragment extends Fragment {
         users.add(user);
         adapter.notifyDataSetChanged();
     }
+
 }

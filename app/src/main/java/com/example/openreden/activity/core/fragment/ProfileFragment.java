@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 
 public class ProfileFragment extends Fragment {
 
@@ -81,7 +82,6 @@ public class ProfileFragment extends Fragment {
     private String username, name, city, email, galleryReference;
     private boolean usernameETShown, nameETShown, bioETShown, cityETShown;
     private byte[] profilePhotoData;
-    private int loadingCount = 1, galleryReferenceIndex;
     @SuppressLint("StaticFieldLeak")
     public static LinearLayout shadeLL, photoOptionsLL;
     public static boolean photoOptionsShown;
@@ -89,7 +89,7 @@ public class ProfileFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         fragmentView = inflater.inflate(R.layout.fragment_profile, container, false);
-        context = fragmentView.getContext();
+        context = Objects.requireNonNull(getActivity()).getApplicationContext();
         getInstances();
         findViewsByIds();
         setUserData();
@@ -152,12 +152,10 @@ public class ProfileFragment extends Fragment {
         setGallery();
         setListeners();
     }
+    @SuppressLint("SetTextI18n")
     private void setGallery(){
         galleryReferences = new ArrayList<>(sharedPreferences.getStringSet(StaticClass.GALLERY, new HashSet<String>()));
-        String twoSpaces = "  ";
-        StringBuilder stringBuilder = new StringBuilder(getString(R.string.pictures));
-        stringBuilder.append(twoSpaces).append("(").append(photos.size()).append("/3)");
-        galleryTV.setText(stringBuilder);
+        galleryTV.setText(getString(R.string.pictures)+"  ("+photos.size()+"/3)");
         galleryVP.setVisibility(photos.isEmpty() ? View.GONE : View.VISIBLE);
         emptyGalleryTV.setVisibility(!photos.isEmpty() ? View.GONE : View.VISIBLE);
         deleteGalleryPhotoIV.setVisibility(photos.isEmpty() ? View.GONE : View.VISIBLE);
@@ -276,11 +274,11 @@ public class ProfileFragment extends Fragment {
                 photoIV.getHeight(), false));
     }
     private void getGallery(){
+        photos.clear();
+        if(galleryAdapter!=null) galleryAdapter.notifyDataSetChanged();
         if(!galleryReferences.isEmpty()){
             final long ONE_MEGABYTE = 1024 * 1024 * 2;
             for(final String reference: galleryReferences){
-                progressDialog.setMessage("Picture ("+ loadingCount +"/"+galleryReferences.size()+")");
-                progressDialog.show();
                 storage.getReference(reference)
                         .getBytes(ONE_MEGABYTE)
                         .addOnSuccessListener(new OnSuccessListener<byte[]>() {
@@ -290,8 +288,6 @@ public class ProfileFragment extends Fragment {
                                         BitmapFactory.decodeByteArray(bytes, 0, bytes.length),
                                         reference));
                                 setGallery();
-                                progressDialog.dismiss();
-                                loadingCount++;
                             }
                         }).addOnFailureListener(new OnFailureListener() {
                             @Override
@@ -694,7 +690,7 @@ public class ProfileFragment extends Fragment {
     private void deletePhotoGallery(){
         progressDialog.setMessage("Deleting...");
         progressDialog.show();
-        galleryReferenceIndex = galleryVP.getCurrentItem();
+        int galleryReferenceIndex = galleryVP.getCurrentItem();
         galleryReference = photos.get(galleryReferenceIndex).getStorageReference();
         storage.getReference()
                 .child(galleryReference)

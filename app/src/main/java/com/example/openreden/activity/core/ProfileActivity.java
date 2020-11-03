@@ -32,8 +32,8 @@ import java.util.Objects;
 public class ProfileActivity extends AppCompatActivity {
 
     private ImageView photoIV;
-    private TextView usernameTV, nameTV, bioTV, emptyGalleryTV;
-    private ProgressBar profilePhotoPB, galleryPB;
+    private TextView usernameTV, nameTV, bioTV, cityTV, emptyGalleryTV;
+    private ProgressBar galleryPB;
     private ViewPager galleryVP;
     private GalleryAdapter galleryAdapter;
     private ArrayList<Photo> galleryPhotos = new ArrayList<>();
@@ -63,7 +63,7 @@ public class ProfileActivity extends AppCompatActivity {
         usernameTV = findViewById(R.id.usernameTV);
         nameTV = findViewById(R.id.nameTV);
         bioTV = findViewById(R.id.bioTV);
-        profilePhotoPB = findViewById(R.id.profilePhotoPB);
+        cityTV = findViewById(R.id.cityTV);
         galleryPB = findViewById(R.id.galleryPB);
         emptyGalleryTV = findViewById(R.id.emptyGalleryTV);
         galleryVP = findViewById(R.id.galleryVP);
@@ -88,7 +88,6 @@ public class ProfileActivity extends AppCompatActivity {
         Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         photoIV.setImageBitmap(Bitmap.createScaledBitmap(bmp, photoIV.getWidth(),
                 photoIV.getHeight(), false));
-        profilePhotoPB.setVisibility(View.GONE);
     }
     private void setProfileData(){
         database.collection("users")
@@ -103,6 +102,7 @@ public class ProfileActivity extends AppCompatActivity {
                             nameTV.setText(name);
                             setActionBarTitle(name);
                             bioTV.setText(String.valueOf(document.get("bio")));
+                            cityTV.setText(String.valueOf(document.get("city")));
                             getGalleryPhotos((ArrayList<String>)document.get("gallery"));
                         }
                     }
@@ -138,6 +138,7 @@ public class ProfileActivity extends AppCompatActivity {
         }else{
             galleryVP.setVisibility(View.GONE);
             emptyGalleryTV.setVisibility(View.VISIBLE);
+            galleryPB.setVisibility(View.GONE);
         }
     }
     private void setGallery(){
@@ -182,10 +183,19 @@ public class ProfileActivity extends AppCompatActivity {
         .putExtra(StaticClass.FROM, StaticClass.PROFILE_ACTIVITY));
     }
     public void setActionBarTitle(String title){
-        Objects.requireNonNull(getSupportActionBar()).setHomeAsUpIndicator(R.drawable.ic_message_white_24dp);
+        Objects.requireNonNull(getSupportActionBar()).setHomeAsUpIndicator(R.drawable.ic_arrow_back_white);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         Objects.requireNonNull(getSupportActionBar()).setTitle(
                 Html.fromHtml("<font color=\"#ffffff\"> "+title+" </font>")
         );
+    }
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(getApplicationContext(), CoreActivity.class));
+    }
+    @Override
+    public boolean onNavigateUp() {
+        onBackPressed();
+        return false;
     }
 }

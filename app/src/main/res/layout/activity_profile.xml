@@ -28,11 +28,6 @@
                     android:src="@drawable/ic_account_circle_grey"
                     app:civ_border_color="#ffffff"
                     app:civ_border_width="2dp"/>
-                <ProgressBar
-                    android:id="@+id/profilePhotoPB"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true" />
             </RelativeLayout>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -99,6 +94,28 @@
                     android:layout_weight="1"
                     android:layout_height="40dp"
                     android:text="@string/bio"
+                    android:textSize="14sp"
+                    android:textColor="#000000"
+                    android:background="@color/white"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center_vertical"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp">
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="0.2"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_location_special"/>
+                <TextView
+                    android:id="@+id/cityTV"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="40dp"
+                    android:text="@string/city"
                     android:textSize="14sp"
                     android:textColor="#000000"
                     android:background="@color/white"

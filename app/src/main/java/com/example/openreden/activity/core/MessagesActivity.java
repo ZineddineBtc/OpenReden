@@ -28,6 +28,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
@@ -36,6 +37,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -49,6 +51,7 @@ public class MessagesActivity extends AppCompatActivity {
     private RecyclerView messagesRV;
     private MessageAdapter adapter;
     private ArrayList<Message> messages = new ArrayList<>();
+    private ArrayList<String> interlocutors = new ArrayList<>();
     private ProgressDialog progressDialog;
     private FirebaseFirestore database;
     private FirebaseStorage storage;
@@ -57,6 +60,7 @@ public class MessagesActivity extends AppCompatActivity {
     private Message message = new Message();
     private String email, interlocutorID, from, chatReference,
             content, emailRead, interlocutorRead, interlocutorName;
+    private boolean isNewChat=true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +81,8 @@ public class MessagesActivity extends AppCompatActivity {
         database = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
         progressDialog = new ProgressDialog(this);
+        interlocutors.add(email);
+        interlocutors.add(interlocutorID);
     }
     private void findViewsByIds(){
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -152,15 +158,17 @@ public class MessagesActivity extends AppCompatActivity {
     }
     private void getChatReference(){
         database.collection("chats")
-                .whereArrayContains("interlocutors", email)
+                .whereIn("interlocutors", Arrays.asList(Arrays.asList(email, interlocutorID), Arrays.asList(interlocutorID, email)))
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        for(DocumentSnapshot document: queryDocumentSnapshots){
-                            if(document.exists()){
-                                chatReference = document.getId();
-                                getMessages();
+                        if(!queryDocumentSnapshots.isEmpty()){
+                            for (DocumentSnapshot document : queryDocumentSnapshots) {
+                                if (document.exists()) {
+                                    chatReference = document.getId();
+                                    getMessages();
+                                }
                             }
                         }
                     }
@@ -196,6 +204,7 @@ public class MessagesActivity extends AppCompatActivity {
                                     messagesRV.smoothScrollToPosition(0);
                                     setRead();
                                 }
+                                if(isNewChat) isNewChat=false;
                             }
                         }
                     }
@@ -205,6 +214,7 @@ public class MessagesActivity extends AppCompatActivity {
         database.collection("chats")
                 .document(chatReference)
                 .update(emailRead, true);
+
     }
     private void setMessage(){
         message.setContent(content);
@@ -219,6 +229,13 @@ public class MessagesActivity extends AppCompatActivity {
         messageMap.put("time", message.getTime());
     }
     private void send(){
+        if(isNewChat){
+            createNewChat();
+            Toast.makeText(getApplicationContext(),
+                    "New Chat",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
         setMessage();
         putMessageMap();
         messageReference = database.collection("messages").document();
@@ -253,6 +270,40 @@ public class MessagesActivity extends AppCompatActivity {
         database.collection("chats")
                 .document(chatReference)
                 .update(chatMap)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getApplicationContext(),
+                                "Error updating chatDB",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+    private void createNewChat(){
+        chatMap.put("interlocutors", interlocutors);
+        final DocumentReference newDoc = database.collection("chats").document();
+        newDoc.set(chatMap)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        chatReference = newDoc.getId();
+                        getMessages();
+                        database.collection("users")
+                                .document(email)
+                                .update("chats", FieldValue.arrayUnion(chatReference));
+                        database.collection("users")
+                                .document(interlocutorID)
+                                .update("chats", FieldValue.arrayUnion(chatReference));
+                        isNewChat = false;
+                        send();
+                    }
+                })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
