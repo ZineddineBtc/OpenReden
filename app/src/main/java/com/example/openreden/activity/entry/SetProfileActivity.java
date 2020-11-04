@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.Activity;
@@ -25,6 +27,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +36,7 @@ import com.example.openreden.R;
 import com.example.openreden.StaticClass;
 import com.example.openreden.activity.TermsActivity;
 import com.example.openreden.activity.core.CoreActivity;
+import com.example.openreden.adapter.CountriesAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -44,6 +49,7 @@ import com.google.firebase.storage.UploadTask;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -53,14 +59,22 @@ public class SetProfileActivity extends AppCompatActivity {
 
     private ImageView photoIV;
     private TextView errorTV;
-    private EditText usernameET, nameET, bioET, cityET;
+    private EditText usernameET, nameET, bioET;
+    private RecyclerView countriesRV;
+    private CountriesAdapter countriesAdapter;
     private ProgressDialog progressDialog;
     private FirebaseFirestore database;
     private FirebaseStorage storage;
     private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
     private ArrayList<String> usernameList = new ArrayList<>();
-    private String username, name, bio, email, city;
+    private String username, name, bio, email, country;
     private boolean imagePicked, usernameAvailable;
+
+    public static LinearLayout shadeLL, countriesLL;
+    public static SearchView searchCountrySV;
+    public static TextView countryTV;
+    public static boolean countriesLLShown, countryPicked;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +88,7 @@ public class SetProfileActivity extends AppCompatActivity {
     }
     private void initializeInstances(){
         sharedPreferences = getSharedPreferences(StaticClass.SHARED_PREFERENCES, MODE_PRIVATE);
+        email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         database = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
         progressDialog = new ProgressDialog(this);
@@ -129,7 +144,13 @@ public class SetProfileActivity extends AppCompatActivity {
         });
         nameET = findViewById(R.id.nameET);
         bioET = findViewById(R.id.bioET);
-        cityET = findViewById(R.id.cityET);
+        countryTV = findViewById(R.id.countryTV);
+        countryTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setCountry();
+            }
+        });
         Button finishButton = findViewById(R.id.finishButton);
         finishButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -137,6 +158,32 @@ public class SetProfileActivity extends AppCompatActivity {
                 finishRegister();
             }
         });
+        shadeLL = findViewById(R.id.shadeLL);
+        countriesLL = findViewById(R.id.countriesLL);
+        searchCountrySV = findViewById(R.id.searchCountrySV);
+        searchCountrySV.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                countriesAdapter.filter(newText);
+                return false;
+            }
+        });
+        countriesRV = findViewById(R.id.countriesRV);
+        setCountriesRV();
+    }
+    private void setCountriesRV(){
+        countriesAdapter = new CountriesAdapter(getApplicationContext(),
+                new ArrayList<>(Arrays.asList(StaticClass.countries)), "",
+                database.collection("users").document(email), editor,
+                StaticClass.SET_PROFILE_ACTIVITY);
+        countriesRV.setLayoutManager(new LinearLayoutManager(getApplicationContext(),
+                LinearLayoutManager.VERTICAL, false));
+        countriesRV.setAdapter(countriesAdapter);
     }
     public void importImage(View view){
         Intent intent;
@@ -200,7 +247,6 @@ public class SetProfileActivity extends AppCompatActivity {
                 });
     }
     private void finishRegister(){
-        email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         if(!imagePicked){
             displayErrorTV(R.string.no_photo_selected);
             return;
@@ -224,9 +270,9 @@ public class SetProfileActivity extends AppCompatActivity {
             displayErrorTV(R.string.empty_bio);
             return;
         }
-        city = cityET.getText().toString().trim();
-        if(city.length()<2){
-            displayErrorTV(R.string.invalid_city);
+        country = countryTV.getText().toString().trim();
+        if(!countryPicked){
+            displayErrorTV(R.string.unspecified_country);
             return;
         }
         progressDialog.show();
@@ -256,13 +302,18 @@ public class SetProfileActivity extends AppCompatActivity {
             }
         });
     }
+    private void setCountry(){
+        shadeLL.setVisibility(View.VISIBLE);
+        countriesLL.setVisibility(View.VISIBLE);
+        countriesLLShown = true;
+    }
     private void writeSharedPreferences(){
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor = sharedPreferences.edit();
         editor.putString(StaticClass.EMAIL, email);
         editor.putString(StaticClass.USERNAME, username);
         editor.putString(StaticClass.NAME, name);
         editor.putString(StaticClass.BIO, bio);
-        editor.putString(StaticClass.CITY, city);
+        editor.putString(StaticClass.COUNTRY, country);
         editor.putStringSet(StaticClass.GALLERY, new HashSet<>(new ArrayList<String>()));
         editor.apply();
         appendUsernameToDB();
@@ -289,7 +340,7 @@ public class SetProfileActivity extends AppCompatActivity {
         userReference.put("username", username);
         userReference.put("name", name);
         userReference.put("bio", bio);
-        userReference.put("city", city);
+        userReference.put("country", country);
         userReference.put("gallery", new ArrayList<String>());
         userReference.put("chats", new ArrayList<String>());
         database.collection("users")
@@ -328,6 +379,12 @@ public class SetProfileActivity extends AppCompatActivity {
     }
     @Override
     public void onBackPressed() {
+        if(countriesLLShown){
+            shadeLL.setVisibility(View.GONE);
+            countriesLL.setVisibility(View.GONE);
+            countriesLLShown = false;
+            return;
+        }
         moveTaskToBack(true);
     }
 }

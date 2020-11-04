@@ -85,7 +85,7 @@ public class LoginActivity extends AppCompatActivity {
         editor.putString(StaticClass.USERNAME, user.getUsername());
         editor.putString(StaticClass.NAME, user.getName());
         editor.putString(StaticClass.BIO, user.getBio());
-        editor.putString(StaticClass.CITY, user.getCity());
+        editor.putString(StaticClass.COUNTRY, user.getCountry());
         editor.putStringSet(StaticClass.GALLERY, new HashSet<>(user.getGalleryReferences()));
         editor.putString(StaticClass.EMAIL, user.getId());
         editor.apply();
@@ -99,7 +99,7 @@ public class LoginActivity extends AppCompatActivity {
         user.setUsername(String.valueOf(document.get("username")));
         user.setName(String.valueOf(document.get("name")));
         user.setBio(String.valueOf(document.get("bio")));
-        user.setCity(String.valueOf(document.get("city")));
+        user.setCountry(String.valueOf(document.get("country")));
         user.setGalleryReferences((ArrayList<String>)document.get("gallery"));
         setSharedPreferences(user);
     }

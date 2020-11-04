@@ -23,18 +23,22 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import com.example.openreden.R;
 import com.example.openreden.StaticClass;
 import com.example.openreden.activity.core.FullScreenActivity;
 import com.example.openreden.activity.entry.LoginActivity;
+import com.example.openreden.adapter.CountriesAdapter;
 import com.example.openreden.adapter.GalleryAdapter;
 import com.example.openreden.model.Photo;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -52,6 +56,7 @@ import com.google.firebase.storage.UploadTask;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -61,17 +66,20 @@ public class ProfileFragment extends Fragment {
 
     private View fragmentView;
     private Context context;
-    private ImageView photoIV, editUsernameIV, editNameIV, editBioIV, editCityIV,
+    private ImageView photoIV, editUsernameIV, editNameIV, editBioIV,
             addGalleryPhotoIV, deleteGalleryPhotoIV;
-    private TextView usernameTV, nameTV, bioTV, cityTV, emailTV, galleryTV, emptyGalleryTV,
+    private TextView usernameTV, nameTV, bioTV, emailTV, galleryTV, emptyGalleryTV,
             signOutTV, errorTV;
-    private EditText usernameET, nameET, bioET, cityET;
+    private EditText usernameET, nameET, bioET;
     private ViewPager galleryVP;
     private GalleryAdapter galleryAdapter;
     private LinearLayout galleryDotsLL;
     private ImageView[] dots;
     private int dotsCount;
     private LinearLayout viewPhotoLL, uploadPhotoLL;
+    private SearchView searchCountrySV;
+    private RecyclerView countriesRV;
+    private CountriesAdapter countriesAdapter;
     private ProgressDialog progressDialog;
     private FirebaseFirestore database;
     private FirebaseStorage storage;
@@ -79,12 +87,13 @@ public class ProfileFragment extends Fragment {
     private SharedPreferences.Editor editor;
     private ArrayList<String> galleryReferences;
     private ArrayList<Photo> photos = new ArrayList<>();
-    private String username, name, city, email, galleryReference;
-    private boolean usernameETShown, nameETShown, bioETShown, cityETShown;
+    private String username, name, country, email, galleryReference;
+    private boolean usernameETShown, nameETShown, bioETShown, isCountriesRVSet;
     private byte[] profilePhotoData;
     @SuppressLint("StaticFieldLeak")
-    public static LinearLayout shadeLL, photoOptionsLL;
-    public static boolean photoOptionsShown;
+    public static LinearLayout shadeLL, photoOptionsLL, countriesLL;
+    public static boolean photoOptionsShown, countriesListShown;
+    public static TextView countryTV;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -116,9 +125,7 @@ public class ProfileFragment extends Fragment {
         bioTV = fragmentView.findViewById(R.id.bioTV);
         bioET = fragmentView.findViewById(R.id.bioET);
         editBioIV = fragmentView.findViewById(R.id.editBioIV);
-        cityTV = fragmentView.findViewById(R.id.cityTV);
-        cityET = fragmentView.findViewById(R.id.cityET);
-        editCityIV = fragmentView.findViewById(R.id.editCityIV);
+        countryTV = fragmentView.findViewById(R.id.countryLL);
         emailTV = fragmentView.findViewById(R.id.emailTV);
         galleryTV = fragmentView.findViewById(R.id.galleryTV);
         addGalleryPhotoIV = fragmentView.findViewById(R.id.addGalleryPhotoIV);
@@ -132,6 +139,9 @@ public class ProfileFragment extends Fragment {
         photoOptionsLL = fragmentView.findViewById(R.id.photoOptionsLL);
         viewPhotoLL = fragmentView.findViewById(R.id.viewPhotoLL);
         uploadPhotoLL = fragmentView.findViewById(R.id.uploadPhotoLL);
+        countriesLL = fragmentView.findViewById(R.id.countriesLL);
+        searchCountrySV = fragmentView.findViewById(R.id.searchCountrySV);
+        countriesRV = fragmentView.findViewById(R.id.countriesRV);
     }
     private void setUserData(){
         photoIV.setDrawingCacheEnabled(true);
@@ -145,9 +155,8 @@ public class ProfileFragment extends Fragment {
         String bio = sharedPreferences.getString(StaticClass.BIO, "no bio");
         bioTV.setText(bio);
         bioET.setText(bio);
-        city = sharedPreferences.getString(StaticClass.CITY, "no city");
-        cityTV.setText(city);
-        cityET.setText(city);
+        country = sharedPreferences.getString(StaticClass.COUNTRY, "no country");
+        countryTV.setText(country);
         emailTV.setText(email);
         setGallery();
         setListeners();
@@ -218,10 +227,10 @@ public class ProfileFragment extends Fragment {
                 editBio();
             }
         });
-        editCityIV.setOnClickListener(new View.OnClickListener() {
+        countryTV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                editCity();
+                editCountry();
             }
         });
         addGalleryPhotoIV.setOnClickListener(new View.OnClickListener() {
@@ -264,7 +273,7 @@ public class ProfileFragment extends Fragment {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                Toast.makeText(context, "Failure", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Failure at downloading profile photo", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -397,7 +406,7 @@ public class ProfileFragment extends Fragment {
         });
     }
     private void editUsername(){
-        if(nameETShown || bioETShown || cityETShown){
+        if(nameETShown || bioETShown){
             Toast.makeText(context, "Pending edit", Toast.LENGTH_LONG).show();
             return;
         }
@@ -485,7 +494,7 @@ public class ProfileFragment extends Fragment {
                 });
     }
     private void editName(){
-        if(usernameETShown || bioETShown || cityETShown){
+        if(usernameETShown || bioETShown){
             Toast.makeText(context, "Pending edit", Toast.LENGTH_LONG).show();
             return;
         }
@@ -542,7 +551,7 @@ public class ProfileFragment extends Fragment {
                 });
     }
     private void editBio(){
-        if(usernameETShown || nameETShown || cityETShown){
+        if(usernameETShown || nameETShown){
             Toast.makeText(context, "Pending edit", Toast.LENGTH_LONG).show();
             return;
         }
@@ -592,62 +601,37 @@ public class ProfileFragment extends Fragment {
                     }
                 });
     }
-    private void editCity(){
+    private void editCountry(){
         if(usernameETShown || nameETShown || bioETShown){
             Toast.makeText(context, "Pending edit", Toast.LENGTH_LONG).show();
             return;
         }
-        if(cityETShown){
-            String newCity = cityET.getText().toString();
-            if(newCity.length()>2){
-                if(!city.equals(newCity)){
-                    writeCity(newCity);
-                }
-            }else{
-                displayErrorTV(R.string.invalid_city);
+        countriesLL.setVisibility(View.VISIBLE);
+        shadeLL.setVisibility(View.VISIBLE);
+        countriesListShown = true;
+        searchCountrySV.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
             }
-        }else{
-            toggleCity();
-        }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                countriesAdapter.filter(newText);
+                return false;
+            }
+        });
+        if(!isCountriesRVSet) setCountriesRV();
     }
-    private void toggleCity(){
-        cityET.setVisibility(!cityETShown ? View.VISIBLE : View.GONE);
-        cityTV.setVisibility(cityETShown ? View.VISIBLE : View.GONE);
-        editCityIV.setImageDrawable(cityETShown ?
-                context.getDrawable(R.drawable.ic_edit) :
-                context.getDrawable(R.drawable.ic_check));
-        if(!cityETShown){
-            cityET.requestFocus();
-        }
-        cityETShown = !cityETShown;
-    }
-    private void writeCity(final String city){
-        Map<String, Object> userReference = new HashMap<>();
-        userReference.put("city", city);
-        database.collection("users")
-                .document(email)
-                .update(userReference)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        hideKeyboard();
-                        editor.putString(StaticClass.CITY, city);
-                        editor.apply();
-                        toggleCity();
-                        setUserData();
-                        Snackbar.make(fragmentView.findViewById(R.id.parentLayout),
-                                "City updated", 1000)
-                                .setAction("Action", null).show();
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(fragmentView.getContext(),
-                                "Error writing name",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+    private void setCountriesRV(){
+        countriesAdapter = new CountriesAdapter(context,
+                new ArrayList<>(Arrays.asList(StaticClass.countries)), country,
+                database.collection("users").document(email), editor,
+                StaticClass.PROFILE_FRAGMENT);
+        countriesRV.setLayoutManager(new LinearLayoutManager(context,
+                LinearLayoutManager.VERTICAL, false));
+        countriesRV.setAdapter(countriesAdapter);
+        isCountriesRVSet = true;
     }
     private byte[] getGalleryPhotoData(Bitmap imageBitmap){
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

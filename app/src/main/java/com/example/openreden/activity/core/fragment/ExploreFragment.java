@@ -34,14 +34,14 @@ public class ExploreFragment extends Fragment {
     private View fragmentView;
     private Context context;
     private ProgressBar progressBar;
-    private TextView cityTV;
-    private LinearLayout cityLL;
+    private TextView countryTV;
+    private LinearLayout countryLL;
     private RecyclerView gridRV;
     private GridRVAdapter adapter;
     private ArrayList<User> users = new ArrayList<>();
     private FirebaseFirestore database;
     private FirebaseStorage storage;
-    private String email, city;
+    private String email, country;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -58,13 +58,13 @@ public class ExploreFragment extends Fragment {
         storage = FirebaseStorage.getInstance();
         SharedPreferences sharedPreferences = context.getSharedPreferences(StaticClass.SHARED_PREFERENCES, Context.MODE_PRIVATE);
         email = sharedPreferences.getString(StaticClass.EMAIL, "no email");
-        city = sharedPreferences.getString(StaticClass.CITY, "no city");
+        country = sharedPreferences.getString(StaticClass.COUNTRY, "no country");
     }
     private void findViewsByIds(){
         progressBar = fragmentView.findViewById(R.id.progressBar);
-        cityLL = fragmentView.findViewById(R.id.cityLL);
-        cityTV = fragmentView.findViewById(R.id.cityTV);
-        cityTV.setText(city);
+        countryLL = fragmentView.findViewById(R.id.countryLL);
+        countryTV = fragmentView.findViewById(R.id.countryTV);
+        countryTV.setText(country);
         gridRV = fragmentView.findViewById(R.id.gridRV);
     }
     private void setGridRV(){
@@ -77,17 +77,17 @@ public class ExploreFragment extends Fragment {
                 String t;
                 switch (newState) {
                     case RecyclerView.SCROLL_STATE_IDLE:
-                        cityLL.setAlpha(1f);
-                        for(int i=0; i<=city.length(); i++){
-                            t = city.substring(0, i);
-                            cityTV.setText(t);
+                        countryLL.setAlpha(1f);
+                        for(int i = 0; i<= country.length(); i++){
+                            t = country.substring(0, i);
+                            countryTV.setText(t);
                         }
                         break;
                     case RecyclerView.SCROLL_STATE_DRAGGING:
-                        cityLL.setAlpha(0.5f);
-                        for(int i=city.length()-1; i>=0; i--){
-                            t = city.substring(0, i);
-                            cityTV.setText(t);
+                        countryLL.setAlpha(0.5f);
+                        for(int i = country.length()-1; i>=0; i--){
+                            t = country.substring(0, i);
+                            countryTV.setText(t);
                         }
                         break;
                 }

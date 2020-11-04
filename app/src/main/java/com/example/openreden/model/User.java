@@ -5,7 +5,7 @@ import android.graphics.Bitmap;
 import java.util.ArrayList;
 
 public class User {
-    private String id, username, name, bio, city;
+    private String id, username, name, bio, country;
     private Bitmap photoBitmap;
     private byte[] bytes;
     private ArrayList<String> galleryReferences;
@@ -17,12 +17,12 @@ public class User {
         this.name = name;
     }
 
-    public User(String id, String username, String name, String bio, String city) {
+    public User(String id, String username, String name, String bio, String country) {
         this.id = id;
         this.username = username;
         this.name = name;
         this.bio = bio;
-        this.city = city;
+        this.country = country;
     }
 
     public byte[] getPhotoBytes() {
@@ -49,12 +49,12 @@ public class User {
         this.bio = bio;
     }
 
-    public String getCity() {
-        return city;
+    public String getCountry() {
+        return country;
     }
 
-    public void setCity(String city) {
-        this.city = city;
+    public void setCountry(String country) {
+        this.country = country;
     }
 
     public ArrayList<String> getGalleryReferences() {

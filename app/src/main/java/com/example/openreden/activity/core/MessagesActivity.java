@@ -324,5 +324,4 @@ public class MessagesActivity extends AppCompatActivity {
                     .putExtra(StaticClass.TO, StaticClass.CHATS_FRAGMENT));
         }
     }
-
 }

@@ -167,22 +167,22 @@
                     android:src="@drawable/ic_location_special"/>
                 <EditText
                     android:visibility="gone"
-                    android:id="@+id/cityET"
+                    android:id="@+id/countryTV"
                     android:layout_width="0dp"
                     android:layout_weight="0.8"
                     android:layout_height="40dp"
-                    android:text="@string/city"
+                    android:text="@string/country"
                     android:textSize="14sp"
                     android:textColor="#000000"
                     android:background="@color/white"
                     android:layout_gravity="center_vertical"
                     android:gravity="center_vertical"/>
                 <TextView
-                    android:id="@+id/cityTV"
+                    android:id="@+id/countryLL"
                     android:layout_width="0dp"
                     android:layout_weight="0.8"
                     android:layout_height="40dp"
-                    android:text="@string/city"
+                    android:text="@string/country"
                     android:textSize="14sp"
                     android:textColor="#000000"
                     android:background="@color/white"
@@ -387,5 +387,28 @@
                 android:textColor="@color/black"
                 android:textSize="16sp" />
         </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:visibility="gone"
+        android:id="@+id/countriesLL"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/white_background_rounded_border"
+        android:orientation="vertical"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="50dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginStart="20dp">
+        <SearchView
+            android:id="@+id/searchCountrySV"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:iconifiedByDefault="false"
+            android:layout_margin="10dp"
+            android:queryHint="Search a country"/>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/countriesRV"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
     </LinearLayout>
 </RelativeLayout>

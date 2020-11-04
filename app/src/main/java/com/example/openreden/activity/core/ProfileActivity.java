@@ -32,7 +32,7 @@ import java.util.Objects;
 public class ProfileActivity extends AppCompatActivity {
 
     private ImageView photoIV;
-    private TextView usernameTV, nameTV, bioTV, cityTV, emptyGalleryTV;
+    private TextView usernameTV, nameTV, bioTV, countryTV, emptyGalleryTV;
     private ProgressBar galleryPB;
     private ViewPager galleryVP;
     private GalleryAdapter galleryAdapter;
@@ -63,7 +63,7 @@ public class ProfileActivity extends AppCompatActivity {
         usernameTV = findViewById(R.id.usernameTV);
         nameTV = findViewById(R.id.nameTV);
         bioTV = findViewById(R.id.bioTV);
-        cityTV = findViewById(R.id.cityTV);
+        countryTV = findViewById(R.id.countryTV);
         galleryPB = findViewById(R.id.galleryPB);
         emptyGalleryTV = findViewById(R.id.emptyGalleryTV);
         galleryVP = findViewById(R.id.galleryVP);
@@ -102,7 +102,7 @@ public class ProfileActivity extends AppCompatActivity {
                             nameTV.setText(name);
                             setActionBarTitle(name);
                             bioTV.setText(String.valueOf(document.get("bio")));
-                            cityTV.setText(String.valueOf(document.get("city")));
+                            countryTV.setText(String.valueOf(document.get("country")));
                             getGalleryPhotos((ArrayList<String>)document.get("gallery"));
                         }
                     }

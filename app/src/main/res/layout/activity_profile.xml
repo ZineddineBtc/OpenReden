@@ -111,11 +111,11 @@
                     android:layout_gravity="center_vertical"
                     android:src="@drawable/ic_location_special"/>
                 <TextView
-                    android:id="@+id/cityTV"
+                    android:id="@+id/countryTV"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="40dp"
-                    android:text="@string/city"
+                    android:text="@string/country"
                     android:textSize="14sp"
                     android:textColor="#000000"
                     android:background="@color/white"
