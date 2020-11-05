@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -44,7 +45,7 @@ import java.util.Objects;
 
 import java.lang.System;
 
-public class MessagesActivity extends AppCompatActivity {
+public class MessagesActivity extends Activity {
 
     private ImageView interlocutorPhotoIV;
     private TextView interlocutorUsernameTV, interlocutorNameTV, textET, seenTV;
@@ -72,7 +73,6 @@ public class MessagesActivity extends AppCompatActivity {
         getChatReference();
     }
     private void getInstances(){
-        Objects.requireNonNull(getSupportActionBar()).hide();
         interlocutorID = getIntent().getStringExtra(StaticClass.PROFILE_ID);
         interlocutorRead = interlocutorID.replace(".", "-")+"-read";
         from = getIntent().getStringExtra(StaticClass.FROM);
