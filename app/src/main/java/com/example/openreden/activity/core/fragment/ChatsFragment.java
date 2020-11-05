@@ -80,7 +80,9 @@ public class ChatsFragment extends Fragment {
                             Log.i("INDEX", error.getMessage());
                         }else{
                             chatsList.clear();
-                            for(QueryDocumentSnapshot document: value) {
+                            emptyChatsListTV.setVisibility(value.isEmpty() ?
+                                    View.VISIBLE : View.GONE);
+                            for (QueryDocumentSnapshot document : value) {
                                 if (document != null && document.exists()) {
                                     chatsList.add(new Chat(
                                             document.getId(),

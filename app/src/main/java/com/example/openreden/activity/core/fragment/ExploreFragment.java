@@ -41,19 +41,18 @@ public class ExploreFragment extends Fragment {
     private View fragmentView;
     private Context context;
     private ProgressBar progressBar;
-    private TextView countryTV;
-    private LinearLayout countryLL, shadeLL, countriesLL;
+    private TextView countryTV, emptyGridTV;
+    private LinearLayout countryLL;
     private RecyclerView gridRV;
     private GridRVAdapter gridRVAdapter;
     private ArrayList<User> users = new ArrayList<>();
     private ListView countriesLV;
     private ArrayAdapter countriesAdapter;
     private ArrayList<String> allCountries, copyList;
-    private SearchView searchCountriesSV;
     private FirebaseFirestore database;
-    private FirebaseStorage storage;
     private String email, country;
-
+    public static LinearLayout shadeLL, countriesLL;
+    public static boolean countriesListShown = false;
 
 
     @Override
@@ -69,7 +68,6 @@ public class ExploreFragment extends Fragment {
     }
     private void getInstances(){
         database = FirebaseFirestore.getInstance();
-        storage = FirebaseStorage.getInstance();
         SharedPreferences sharedPreferences = context.getSharedPreferences(StaticClass.SHARED_PREFERENCES, Context.MODE_PRIVATE);
         email = sharedPreferences.getString(StaticClass.EMAIL, "no email");
         country = sharedPreferences.getString(StaticClass.COUNTRY, "no country");
@@ -84,6 +82,7 @@ public class ExploreFragment extends Fragment {
             public void onClick(View v) {
                 shadeLL.setVisibility(View.VISIBLE);
                 countriesLL.setVisibility(View.VISIBLE);
+                countriesListShown = true;
             }
         });
         countryTV = fragmentView.findViewById(R.id.countryTV);
@@ -91,7 +90,7 @@ public class ExploreFragment extends Fragment {
         gridRV = fragmentView.findViewById(R.id.gridRV);
         shadeLL = fragmentView.findViewById(R.id.shadeLL);
         countriesLL = fragmentView.findViewById(R.id.countriesLL);
-        searchCountriesSV = fragmentView.findViewById(R.id.searchCountrySV);
+        SearchView searchCountriesSV = fragmentView.findViewById(R.id.searchCountrySV);
         searchCountriesSV.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -115,6 +114,7 @@ public class ExploreFragment extends Fragment {
             }
         });
         countriesLV = fragmentView.findViewById(R.id.countriesLV);
+        emptyGridTV = fragmentView.findViewById(R.id.emptyGridTV);
     }
     private void setGridRV(){
         gridRVAdapter = new GridRVAdapter(context, users);
@@ -155,8 +155,10 @@ public class ExploreFragment extends Fragment {
                 .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                for(DocumentSnapshot document: queryDocumentSnapshots){
-                    if(document.exists() && !document.getId().equals(email)){
+                emptyGridTV.setVisibility(queryDocumentSnapshots.isEmpty()?
+                        View.VISIBLE : View.GONE);
+                for (DocumentSnapshot document : queryDocumentSnapshots) {
+                    if (document.exists() && !document.getId().equals(email)) {
                         setDocumentProfile(document);
                     }
                 }
@@ -189,6 +191,7 @@ public class ExploreFragment extends Fragment {
                 getProfiles();
                 shadeLL.setVisibility(View.GONE);
                 countriesLL.setVisibility(View.GONE);
+                countriesListShown = false;
             }
         });
     }

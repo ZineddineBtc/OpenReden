@@ -18,11 +18,6 @@ import com.example.openreden.activity.core.fragment.ProfileFragment;
 import com.example.openreden.adapter.TabAdapter;
 import com.google.android.material.tabs.TabLayout;
 
-import static com.example.openreden.activity.core.fragment.ProfileFragment.countriesLL;
-import static com.example.openreden.activity.core.fragment.ProfileFragment.countriesListShown;
-import static com.example.openreden.activity.core.fragment.ProfileFragment.photoOptionsLL;
-import static com.example.openreden.activity.core.fragment.ProfileFragment.photoOptionsShown;
-import static com.example.openreden.activity.core.fragment.ProfileFragment.shadeLL;
 
 public class CoreActivity extends AppCompatActivity {
 
@@ -122,14 +117,18 @@ public class CoreActivity extends AppCompatActivity {
     }
     @Override
     public void onBackPressed() {
-        if (photoOptionsShown) {
-            shadeLL.setVisibility(View.GONE);
-            photoOptionsLL.setVisibility(View.GONE);
-            photoOptionsShown = false;
-        }else if(countriesListShown){
-            shadeLL.setVisibility(View.GONE);
-            countriesLL.setVisibility(View.GONE);
-            countriesListShown = false;
+        if (ProfileFragment.photoOptionsShown) {
+            ProfileFragment.shadeLL.setVisibility(View.GONE);
+            ProfileFragment.photoOptionsLL.setVisibility(View.GONE);
+            ProfileFragment.photoOptionsShown = false;
+        }else if(ProfileFragment.countriesListShown){
+            ProfileFragment.shadeLL.setVisibility(View.GONE);
+            ProfileFragment.countriesLL.setVisibility(View.GONE);
+            ProfileFragment.countriesListShown = false;
+        }else if(ExploreFragment.countriesListShown){
+            ExploreFragment.shadeLL.setVisibility(View.GONE);
+            ExploreFragment.countriesLL.setVisibility(View.GONE);
+            ExploreFragment.countriesListShown = false;
         }else{
             moveTaskToBack(true);
         }
