@@ -47,7 +47,7 @@ import java.lang.System;
 public class MessagesActivity extends AppCompatActivity {
 
     private ImageView interlocutorPhotoIV;
-    private TextView interlocutorUsernameTV, interlocutorNameTV, textET;
+    private TextView interlocutorUsernameTV, interlocutorNameTV, textET, seenTV;
     private RecyclerView messagesRV;
     private MessageAdapter adapter;
     private ArrayList<Message> messages = new ArrayList<>();
@@ -60,7 +60,7 @@ public class MessagesActivity extends AppCompatActivity {
     private Message message = new Message();
     private String email, interlocutorID, from, chatReference,
             content, emailRead, interlocutorRead, interlocutorName;
-    private boolean isNewChat=true;
+    private boolean isNewChat=true, isSeenListenerSet;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,6 +106,7 @@ public class MessagesActivity extends AppCompatActivity {
         interlocutorUsernameTV = toolbar.findViewById(R.id.interlocutorUsernameTV);
         interlocutorNameTV = toolbar.findViewById(R.id.interlocutorNameTV);
         messagesRV = findViewById(R.id.messagesRV);
+        seenTV = findViewById(R.id.seenTV);
     }
     private void setInterlocutorPhoto(){
         progressDialog.setMessage("Loading...");
@@ -152,8 +153,10 @@ public class MessagesActivity extends AppCompatActivity {
     }
     private void setMessagesRV(){
         adapter = new MessageAdapter(getApplicationContext(), messages, email, interlocutorID);
-        messagesRV.setLayoutManager(new LinearLayoutManager(getApplicationContext(),
-                LinearLayoutManager.VERTICAL, true));
+        LinearLayoutManager llm = new LinearLayoutManager(getApplicationContext(),
+                LinearLayoutManager.VERTICAL, true);
+        llm.setStackFromEnd(true);
+        messagesRV.setLayoutManager(llm);
         messagesRV.setAdapter(adapter);
     }
     private void getChatReference(){
@@ -168,6 +171,7 @@ public class MessagesActivity extends AppCompatActivity {
                                 if (document.exists()) {
                                     chatReference = document.getId();
                                     getMessages();
+                                    if(!isSeenListenerSet) setSeenListener();
                                 }
                             }
                         }
@@ -210,6 +214,28 @@ public class MessagesActivity extends AppCompatActivity {
                     }
                 });
     }
+    private void setSeenListener(){
+        isSeenListenerSet = true;
+        database.collection("chats")
+                .document(chatReference)
+                .addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable DocumentSnapshot document, @Nullable FirebaseFirestoreException error) {
+                        if(error != null){
+                            Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
+                            Log.i("INDEX", error.getMessage());
+                        }else{
+                            if(document!=null && document.exists()){
+                                boolean seen = (boolean) document.get(interlocutorRead);
+                                String sender = String.valueOf(document.get("sender"));
+                                if(seen && sender.equals(email)){
+                                    seenTV.setVisibility(View.VISIBLE);
+                                }
+                            }
+                        }
+                    }
+                });
+    }
     private void setRead(){
         database.collection("chats")
                 .document(chatReference)
@@ -243,8 +269,8 @@ public class MessagesActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        messagesRV.smoothScrollToPosition(0);
                         textET.setText("");
+                        seenTV.setVisibility(View.GONE);
                         updateChatDB();
                     }
                 })

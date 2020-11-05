@@ -27,15 +27,17 @@
         android:id="@+id/seenTV"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/seen"
+        android:text="Last message seen"
         android:layout_alignParentEnd="true"
         android:layout_above="@+id/chatBottomLL"
-        android:layout_marginEnd="20dp"/>
+        android:textSize="12sp"/>
     <RelativeLayout
         android:id="@+id/chatBottomLL"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
+        android:paddingBottom="10dp"
+        android:paddingEnd="10dp"
+        android:paddingStart="10dp"
         android:gravity="center_vertical"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"

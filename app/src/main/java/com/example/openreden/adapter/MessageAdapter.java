@@ -65,11 +65,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
         if(message.getSender().equals(userID)){
-            holder.messageTV.setBackgroundColor(context.getColor(R.color.special));
+            holder.messageTV.setBackground(context.getDrawable(R.drawable.special_background_rounded_border));
             holder.parentLayout.setGravity(Gravity.END);
             params.setMargins(50, 10, 10, 10);
         }else{
-            holder.messageTV.setBackgroundColor(context.getColor(R.color.grey));
+            holder.messageTV.setBackground(context.getDrawable(R.drawable.grey_background_rounded_border));
             holder.parentLayout.setGravity(Gravity.START);
             params.setMargins(10, 10, 50, 10);
         }
