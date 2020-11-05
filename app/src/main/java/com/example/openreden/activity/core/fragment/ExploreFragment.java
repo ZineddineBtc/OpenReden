@@ -30,6 +30,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 
@@ -150,9 +151,12 @@ public class ExploreFragment extends Fragment {
     }
     private void getProfiles(){
         users.clear();
-        database.collection("users")
-                .whereEqualTo("country", country)
-                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+        Query query = database.collection("users");
+        if(!country.equals(allCountries.get(0))){
+            query = database.collection("users")
+                    .whereEqualTo("country", country);
+        }
+        query.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 emptyGridTV.setVisibility(queryDocumentSnapshots.isEmpty()?
