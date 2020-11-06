@@ -1,35 +1,29 @@
 package com.example.openreden.adapter;
 
 import android.content.Context;
-import android.content.DialogInterface;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.text.Html;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openreden.R;
-import com.example.openreden.StaticClass;
-import com.example.openreden.model.Chat;
 import com.example.openreden.model.Message;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
 
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+
+import static com.example.openreden.activity.core.MessagesActivity.alertLL;
+import static com.example.openreden.activity.core.MessagesActivity.alertShown;
+import static com.example.openreden.activity.core.MessagesActivity.cancelTV;
+import static com.example.openreden.activity.core.MessagesActivity.deleteTV;
+import static com.example.openreden.activity.core.MessagesActivity.shadeLL;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
 
@@ -38,12 +32,15 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     private ItemClickListener mClickListener;
     private Context context;
     private String userID;
+    private String chatReference;
+
     public MessageAdapter(Context context, List<Message> data,
-                          String userID, String interlocutorID) {
+                          String userID, String chatReference) {
         this.mInflater = LayoutInflater.from(context);
         this.messagesList = data;
         this.context = context;
         this.userID = userID;
+        this.chatReference = chatReference;
     }
 
     @Override
@@ -56,13 +53,73 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         final Message message = messagesList.get(position);
         setMessage(holder, message);
-        holder.parentLayout.setOnLongClickListener(new View.OnLongClickListener() {
+        holder.timeTV.setText(castTime(message.getTime()));
+        holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onLongClick(View v) {
-                setOnLongClickListener(holder, message);
-                return false;
+            public void onClick(View v) {
+                setOnClick(holder);
             }
         });
+        holder.parentLayout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) { toggleAlert(true);return false; }
+        });
+        cancelTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { setOnLongClick(0, holder, message, position); }
+        });
+        deleteTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { setOnLongClick(1, holder, message, position);
+            }
+        });
+    }
+    private String castTime(long messageTime){
+        long currentTime = System.currentTimeMillis();
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(messageTime);
+        int messageDay = c.get(Calendar.DAY_OF_MONTH);
+        int messageMonth = c.get(Calendar.MONTH);
+        int messageYear = c.get(Calendar.YEAR);
+        c.setTimeInMillis(currentTime);
+        int currentDay = c.get(Calendar.DAY_OF_MONTH);
+        int currentMonth = c.get(Calendar.MONTH);
+        int currentYear = c.get(Calendar.YEAR);
+        if(messageYear == currentYear){
+            if((messageDay==currentDay)&&(messageMonth==currentMonth)){
+                return new SimpleDateFormat("HH:mm").format(new Date(messageTime));
+            }else{
+                return new SimpleDateFormat("dd MMM. HH:mm").format(new Date(messageTime));
+            }
+        }else{
+            return new SimpleDateFormat("d MMM. yyyy HH:mm").format(new Date(messageTime));
+
+        }
+    }
+    private void setOnClick(ViewHolder holder){
+        if(holder.timeTV.getVisibility()==View.GONE){
+            holder.timeTV.setVisibility(View.VISIBLE);
+        }else{
+            holder.timeTV.setVisibility(View.GONE);
+        }
+    }
+    private void toggleAlert(boolean show){
+        shadeLL.setVisibility(show ? View.VISIBLE : View.GONE);
+        alertLL.setVisibility(show ? View.VISIBLE : View.GONE);
+        alertShown = show;
+    }
+    private void setOnLongClick(int index, ViewHolder holder, Message message, int position){
+        toggleAlert(false);
+        if(index==1){
+            holder.database.collection("messages")
+                    .document(message.getId())
+                    .delete();
+            if(position == 0) {
+                holder.database.collection("chats")
+                        .document(chatReference)
+                        .update("last-message-content", "DELETED");
+            }
+        }
     }
 
     private void setMessage(ViewHolder holder, Message message){
@@ -74,35 +131,18 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         if(message.getSender().equals(userID)){
             holder.messageTV.setBackground(context.getDrawable(R.drawable.special_background_rounded_border));
             holder.parentLayout.setGravity(Gravity.END);
-            params.setMargins(50, 10, 10, 10);
+            holder.timeTV.setGravity(Gravity.END);
+            params.setMargins(50, 10, 10, 0);
         }else{
             holder.messageTV.setBackground(context.getDrawable(R.drawable.grey_background_rounded_border));
             holder.parentLayout.setGravity(Gravity.START);
-            params.setMargins(10, 10, 50, 10);
+            holder.timeTV.setGravity(Gravity.START);
+            params.setMargins(10, 10, 50, 0);
         }
         holder.parentLayout.setLayoutParams(params);
 
 
     }
-    private void setOnLongClickListener(final ViewHolder holder, final Message message){
-        new AlertDialog.Builder(context.getApplicationContext())
-                .setTitle("Delete Message")
-                .setMessage("Are you sure you want to delete this message?")
-                .setPositiveButton(
-                        Html.fromHtml("<font color=\"#FF0000\"> Delete </font>"),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                holder.database.collection("messages")
-                                        .document(message.getId())
-                                        .delete();
-                            }
-                        })
-                .setNegativeButton(
-                        Html.fromHtml("<font color=\"#28a895\"> Cancel </font>"),
-                        null)
-                .show();
-    }
-
     @Override
     public int getItemCount() {
         return messagesList.size();
@@ -112,7 +152,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private LinearLayout parentLayout;
-        private TextView messageTV;
+        private TextView messageTV, timeTV;
         private View itemView;
         private FirebaseFirestore database;
 
@@ -123,10 +163,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             database = FirebaseFirestore.getInstance();
 
             itemView.setOnClickListener(this);
+
         }
         void findViewsByIds(){
             parentLayout = itemView.findViewById(R.id.parentLayout);
             messageTV = itemView.findViewById(R.id.messageTV);
+            timeTV = itemView.findViewById(R.id.timeTV);
         }
 
 

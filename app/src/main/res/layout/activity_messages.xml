@@ -21,7 +21,8 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/seenTV"
         android:layout_below="@+id/toolbar"
-        android:paddingBottom="5dp"/>
+        android:paddingBottom="5dp"
+        android:foregroundGravity="bottom"/>
     <TextView
         android:visibility="gone"
         android:id="@+id/seenTV"
@@ -31,6 +32,7 @@
         android:layout_alignParentEnd="true"
         android:layout_above="@+id/chatBottomLL"
         android:textSize="12sp"/>
+
     <RelativeLayout
         android:id="@+id/chatBottomLL"
         android:layout_width="match_parent"
@@ -65,5 +67,51 @@
             android:layout_centerVertical="true"
             android:layout_marginStart="10dp"/>
     </RelativeLayout>
+
+    <LinearLayout
+        android:visibility="gone"
+        android:id="@+id/shadeLL"
+        android:background="@color/black"
+        android:alpha="0.5"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+    <LinearLayout
+        android:visibility="gone"
+        android:id="@+id/alertLL"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerInParent="true"
+        android:padding="20dp"
+        android:layout_margin="50dp"
+        android:background="@drawable/white_background_rounded_border">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:textColor="@color/black"
+
+            android:text="@string/are_you_sure_you_want_to_delete_this_message" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="end">
+            <TextView
+                android:id="@+id/cancelTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CANCEL"
+                android:textColor="@color/special"
+                android:layout_marginEnd="10dp"/>
+            <TextView
+                android:id="@+id/deleteTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DELETE"
+                android:textColor="@color/dark_red"/>
+        </LinearLayout>
+    </LinearLayout>
 
 </RelativeLayout>

@@ -2,6 +2,7 @@ package com.example.openreden.activity.core;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -9,13 +10,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Toolbar;
@@ -45,7 +49,7 @@ import java.util.Objects;
 
 import java.lang.System;
 
-public class MessagesActivity extends Activity {
+public class MessagesActivity extends AppCompatActivity {
 
     private ImageView interlocutorPhotoIV;
     private TextView interlocutorUsernameTV, interlocutorNameTV, textET, seenTV;
@@ -62,6 +66,10 @@ public class MessagesActivity extends Activity {
     private String email, interlocutorID, from, chatReference,
             content, emailRead, interlocutorRead, interlocutorName;
     private boolean isNewChat=true, isSeenListenerSet;
+    public static LinearLayout shadeLL, alertLL;
+    public static TextView cancelTV, deleteTV;
+    public static boolean alertShown;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,7 +77,6 @@ public class MessagesActivity extends Activity {
         getInstances();
         findViewsByIds();
         setInterlocutorPhoto();
-        setMessagesRV();
         getChatReference();
     }
     private void getInstances(){
@@ -107,6 +114,10 @@ public class MessagesActivity extends Activity {
         interlocutorNameTV = toolbar.findViewById(R.id.interlocutorNameTV);
         messagesRV = findViewById(R.id.messagesRV);
         seenTV = findViewById(R.id.seenTV);
+        shadeLL = findViewById(R.id.shadeLL);
+        alertLL = findViewById(R.id.alertLL);
+        cancelTV = findViewById(R.id.cancelTV);
+        deleteTV = findViewById(R.id.deleteTV);
     }
     private void setInterlocutorPhoto(){
         progressDialog.setMessage("Loading...");
@@ -152,7 +163,7 @@ public class MessagesActivity extends Activity {
                 });
     }
     private void setMessagesRV(){
-        adapter = new MessageAdapter(getApplicationContext(), messages, email, interlocutorID);
+        adapter = new MessageAdapter(getApplicationContext(), messages, email, chatReference);
         LinearLayoutManager llm = new LinearLayoutManager(getApplicationContext(),
                 LinearLayoutManager.VERTICAL, true);
         llm.setStackFromEnd(true);
@@ -170,6 +181,7 @@ public class MessagesActivity extends Activity {
                             for (DocumentSnapshot document : queryDocumentSnapshots) {
                                 if (document.exists()) {
                                     chatReference = document.getId();
+                                    setMessagesRV();
                                     getMessages();
                                     if(!isSeenListenerSet) setSeenListener();
                                 }
@@ -341,7 +353,11 @@ public class MessagesActivity extends Activity {
     }
     @Override
     public void onBackPressed() {
-        if(from.equals(StaticClass.PROFILE_ACTIVITY)) {
+        if(alertShown) {
+            shadeLL.setVisibility(View.GONE);
+            alertLL.setVisibility(View.GONE);
+            alertShown = false;
+        }else if(from.equals(StaticClass.PROFILE_ACTIVITY)) {
             startActivity(new Intent(getApplicationContext(), ProfileActivity.class)
                     .putExtra(StaticClass.PROFILE_ID, interlocutorID));
         }else if(from.equals(StaticClass.CHATS_FRAGMENT)) {

@@ -58,4 +58,5 @@
     <string name="seen">seen</string>
     <string name="country">Country</string>
     <string name="unspecified_country">Country not specified</string>
+    <string name="are_you_sure_you_want_to_delete_this_message">Are you sure you want to delete this message?</string>
 </resources>
