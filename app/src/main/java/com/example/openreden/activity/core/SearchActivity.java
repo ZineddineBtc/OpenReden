@@ -92,8 +92,8 @@ public class SearchActivity extends AppCompatActivity {
     }
     private void search(String input){
         database.collection("users")
-                .whereGreaterThanOrEqualTo("name", input)
-                .whereLessThanOrEqualTo("name", input+"\uF8FF")
+                .whereGreaterThanOrEqualTo("name", input.toUpperCase())
+                .whereLessThanOrEqualTo("name", input.toLowerCase()+"\uF8FF")
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override

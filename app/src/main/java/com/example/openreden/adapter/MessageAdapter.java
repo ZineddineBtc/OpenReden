@@ -74,6 +74,27 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             }
         });
     }
+    private void setMessage(ViewHolder holder, Message message){
+        holder.messageTV.setText(message.getContent());
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        if(message.getSender().equals(userID)){
+            holder.messageTV.setBackground(context.getDrawable(R.drawable.special_background_rounded_border));
+            holder.parentLayout.setGravity(Gravity.END);
+            holder.timeTV.setGravity(Gravity.END);
+            params.setMargins(50, 10, 10, 0);
+        }else{
+            holder.messageTV.setBackground(context.getDrawable(R.drawable.grey_background_rounded_border));
+            holder.parentLayout.setGravity(Gravity.START);
+            holder.timeTV.setGravity(Gravity.START);
+            params.setMargins(10, 10, 50, 0);
+        }
+        holder.parentLayout.setLayoutParams(params);
+
+
+    }
     private String castTime(long messageTime){
         long currentTime = System.currentTimeMillis();
         Calendar c = Calendar.getInstance();
@@ -120,28 +141,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
                         .update("last-message-content", "DELETED");
             }
         }
-    }
-
-    private void setMessage(ViewHolder holder, Message message){
-        holder.messageTV.setText(message.getContent());
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        if(message.getSender().equals(userID)){
-            holder.messageTV.setBackground(context.getDrawable(R.drawable.special_background_rounded_border));
-            holder.parentLayout.setGravity(Gravity.END);
-            holder.timeTV.setGravity(Gravity.END);
-            params.setMargins(50, 10, 10, 0);
-        }else{
-            holder.messageTV.setBackground(context.getDrawable(R.drawable.grey_background_rounded_border));
-            holder.parentLayout.setGravity(Gravity.START);
-            holder.timeTV.setGravity(Gravity.START);
-            params.setMargins(10, 10, 50, 0);
-        }
-        holder.parentLayout.setLayoutParams(params);
-
-
     }
     @Override
     public int getItemCount() {
