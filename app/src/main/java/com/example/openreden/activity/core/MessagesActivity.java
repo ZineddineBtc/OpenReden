@@ -110,8 +110,26 @@ public class MessagesActivity extends AppCompatActivity {
             }
         });
         interlocutorPhotoIV = toolbar.findViewById(R.id.interlocutorPhotoIV);
+        interlocutorPhotoIV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openProfile();
+            }
+        });
         interlocutorUsernameTV = toolbar.findViewById(R.id.interlocutorUsernameTV);
+        interlocutorUsernameTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openProfile();
+            }
+        });
         interlocutorNameTV = toolbar.findViewById(R.id.interlocutorNameTV);
+        interlocutorNameTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openProfile();
+            }
+        });
         messagesRV = findViewById(R.id.messagesRV);
         seenTV = findViewById(R.id.seenTV);
         shadeLL = findViewById(R.id.shadeLL);
@@ -350,6 +368,10 @@ public class MessagesActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+    private void openProfile(){
+        startActivity(new Intent(getApplicationContext(), ProfileActivity.class)
+                .putExtra(StaticClass.PROFILE_ID, interlocutorID));
     }
     @Override
     public void onBackPressed() {
