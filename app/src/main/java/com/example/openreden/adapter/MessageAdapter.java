@@ -113,7 +113,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
                 return new SimpleDateFormat("dd MMM. HH:mm").format(new Date(messageTime));
             }
         }else{
-            return new SimpleDateFormat("d MMM. yyyy HH:mm").format(new Date(messageTime));
+            return new SimpleDateFormat("dd MMM. yyyy HH:mm").format(new Date(messageTime));
 
         }
     }
